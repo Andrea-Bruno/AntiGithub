@@ -1,0 +1,51 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 16
+VisualStudioVersion = 16.0.31410.357
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BackupCreator", "BackupCreator\BackupCreator.csproj", "{6669F4B4-8B78-4990-B898-CFA158518DA9}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "AntiGit", "AntiGit\AntiGit.csproj", "{FCB5BD6A-7172-4728-ADE2-81AF7CEA0C21}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AntiGitConsole", "AntiGitConsole\AntiGitConsole.csproj", "{00F8EE47-87CD-4713-9E8E-5132DCBE391D}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		DebugMac|Any CPU = DebugMac|Any CPU
+		Release|Any CPU = Release|Any CPU
+		ReleaseMac|Any CPU = ReleaseMac|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{6669F4B4-8B78-4990-B898-CFA158518DA9}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{6669F4B4-8B78-4990-B898-CFA158518DA9}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{6669F4B4-8B78-4990-B898-CFA158518DA9}.DebugMac|Any CPU.ActiveCfg = DebugMac|Any CPU
+		{6669F4B4-8B78-4990-B898-CFA158518DA9}.DebugMac|Any CPU.Build.0 = DebugMac|Any CPU
+		{6669F4B4-8B78-4990-B898-CFA158518DA9}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{6669F4B4-8B78-4990-B898-CFA158518DA9}.Release|Any CPU.Build.0 = Release|Any CPU
+		{6669F4B4-8B78-4990-B898-CFA158518DA9}.ReleaseMac|Any CPU.ActiveCfg = ReleaseMac|Any CPU
+		{6669F4B4-8B78-4990-B898-CFA158518DA9}.ReleaseMac|Any CPU.Build.0 = ReleaseMac|Any CPU
+		{FCB5BD6A-7172-4728-ADE2-81AF7CEA0C21}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{FCB5BD6A-7172-4728-ADE2-81AF7CEA0C21}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{FCB5BD6A-7172-4728-ADE2-81AF7CEA0C21}.DebugMac|Any CPU.ActiveCfg = DebugMac|Any CPU
+		{FCB5BD6A-7172-4728-ADE2-81AF7CEA0C21}.DebugMac|Any CPU.Build.0 = DebugMac|Any CPU
+		{FCB5BD6A-7172-4728-ADE2-81AF7CEA0C21}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{FCB5BD6A-7172-4728-ADE2-81AF7CEA0C21}.Release|Any CPU.Build.0 = Release|Any CPU
+		{FCB5BD6A-7172-4728-ADE2-81AF7CEA0C21}.ReleaseMac|Any CPU.ActiveCfg = ReleaseMac|Any CPU
+		{FCB5BD6A-7172-4728-ADE2-81AF7CEA0C21}.ReleaseMac|Any CPU.Build.0 = ReleaseMac|Any CPU
+		{00F8EE47-87CD-4713-9E8E-5132DCBE391D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{00F8EE47-87CD-4713-9E8E-5132DCBE391D}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{00F8EE47-87CD-4713-9E8E-5132DCBE391D}.DebugMac|Any CPU.ActiveCfg = Debug|Any CPU
+		{00F8EE47-87CD-4713-9E8E-5132DCBE391D}.DebugMac|Any CPU.Build.0 = Debug|Any CPU
+		{00F8EE47-87CD-4713-9E8E-5132DCBE391D}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{00F8EE47-87CD-4713-9E8E-5132DCBE391D}.Release|Any CPU.Build.0 = Release|Any CPU
+		{00F8EE47-87CD-4713-9E8E-5132DCBE391D}.ReleaseMac|Any CPU.ActiveCfg = Release|Any CPU
+		{00F8EE47-87CD-4713-9E8E-5132DCBE391D}.ReleaseMac|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {FF81EE01-4C98-47C6-89A3-30A7B10AA976}
+	EndGlobalSection
+EndGlobal
