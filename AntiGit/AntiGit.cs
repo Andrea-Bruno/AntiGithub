@@ -1,4 +1,8 @@
-﻿using System;
+﻿//===============================================
+// by Bruno Andrea
+//===============================================
+
+using System;
 using System.Collections.Generic;
 using System.Collections.Specialized;
 using System.Diagnostics;
