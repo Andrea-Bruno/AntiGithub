@@ -1,12 +1,11 @@
 ﻿using System;
-using System.Data;
 
 namespace AntiGitConsole
 {
 	class Program
 	{
 
-		static AntiGit.AntiGit Antigit = new AntiGit.AntiGit();
+		static readonly AntiGit.AntiGit _antigit = new AntiGit.AntiGit();
 
 		static void Main(string[] args)
 		{
@@ -15,7 +14,7 @@ namespace AntiGitConsole
 				ExecuteCommand(arg);
 			}
 
-			Console.WriteLine(Antigit.Info);
+			Console.WriteLine(_antigit.Info);
 			PrintStatus();
 			Console.WriteLine();
 			PrintCommands();
@@ -37,17 +36,17 @@ namespace AntiGitConsole
 				{
 					if (command.StartsWith("s="))
 					{
-						Antigit.SourceDir = dir;
+						_antigit.SourceDir = dir;
 						PrintSource();
 					}
 					else if (command.StartsWith("t="))
 					{
-						Antigit.TargetDir = dir;
+						_antigit.TargetDir = dir;
 						PrintTarget();
 					}
 					else if (command.StartsWith("g="))
 					{
-						Antigit.GitDir = dir;
+						_antigit.GitDir = dir;
 						PrintGit();
 					}
 				}
@@ -59,17 +58,17 @@ namespace AntiGitConsole
 			else if (command == "sb")
 			{
 				Console.WriteLine("Start backup");
-				Antigit.Startbackup();
+				_antigit.StartBackup();
 			}
 			else if (command == "ssg")
 			{
 				Console.WriteLine("Stop sync git");
-				Antigit.StopSyncGit();
+				_antigit.StopSyncGit();
 			}
 			else if (command == "sg")
 			{
 				Console.WriteLine("Sync git");
-				Antigit.SyncGit();
+				_antigit.SyncGit();
 			}
 			else if (command == "s")
 			{
@@ -81,17 +80,17 @@ namespace AntiGitConsole
 			}
 		}
 
-		private static void PrintSource() => Console.WriteLine("Source = " + Antigit.SourceDir);
-		private static void PrintTarget() => Console.WriteLine("Target = " + Antigit.TargetDir);
-		private static void PrintGit() => Console.WriteLine("Git = " + Antigit.GitDir);
+		private static void PrintSource() => Console.WriteLine("Source = " + _antigit.SourceDir);
+		private static void PrintTarget() => Console.WriteLine("Target = " + _antigit.TargetDir);
+		private static void PrintGit() => Console.WriteLine("Git = " + _antigit.GitDir);
 
 		private static void PrintStatus()
 		{
 			PrintSource();
 			PrintTarget();
 			PrintGit();
-			Console.WriteLine("backup running = " + Antigit.BackupRunning);
-			Console.WriteLine("sync git running = " + Antigit.SyncGitRunning);
+			Console.WriteLine("backup running = " + _antigit.BackupRunning);
+			Console.WriteLine("sync git running = " + _antigit.SyncGitRunning);
 		}
 		private static void PrintCommands()
 		{

@@ -7,14 +7,12 @@ namespace BackupCreator
 	{
 
 
-		public AntiGit.AntiGit AntiGit;
+		public AntiGit.AntiGit AntiGithub;
 
 		public Form1()
 		{
 			InitializeComponent();
 		}
-
-
 
 		private void Form1_Load(object sender, EventArgs e)
 		{
@@ -29,11 +27,14 @@ namespace BackupCreator
 
 			// Set the start position of the form to the center of the screen.
 			StartPosition = FormStartPosition.CenterScreen;
-
-			AntiGit = new AntiGit.AntiGit();
-			Source.Text = AntiGit.SourceDir;
-			Target.Text = AntiGit.TargetDir;
-			Git.Text = AntiGit.GitDir;
+			void Alert(string Message)
+			{
+				MessageBox.Show(Message);
+			}
+			AntiGithub = new AntiGit.AntiGit(Alert);
+			Source.Text = AntiGithub.SourceDir;
+			Target.Text = AntiGithub.TargetDir;
+			Git.Text = AntiGithub.GitDir;
 			//Minimize_Click(null, null);
 		}
 
@@ -67,29 +68,31 @@ namespace BackupCreator
 
 		private void Source_TextChanged(object sender, EventArgs e)
 		{
-			AntiGit.SourceDir = Source.Text;
+			AntiGithub.SourceDir = Source.Text;
+			Source.Text = AntiGithub.SourceDir;
 		}
 
 		private void Target_TextChanged(object sender, EventArgs e)
 		{
-			AntiGit.TargetDir = Target.Text;
+			AntiGithub.TargetDir = Target.Text;
 		}
 
 		private void Git_TextChanged(object sender, EventArgs e)
 		{
-			AntiGit.GitDir = Git.Text;
+			AntiGithub.GitDir = Git.Text;
+			Git.Text = AntiGithub.GitDir;
 		}
 
 
 		private void backup_Click(object sender, EventArgs e)
 		{
-			AntiGit.Startbackup();
+			AntiGithub.StartBackup();
 		}
 
 
 		private void Form1_FormClosed(object sender, FormClosedEventArgs e)
 		{
-			AntiGit.StopSyncGit();
+			AntiGithub.StopSyncGit();
 		}
 
 		private void notifyIcon1_DoubleClick(object sender, EventArgs e)
