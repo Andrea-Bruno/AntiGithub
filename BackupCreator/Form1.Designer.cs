@@ -1,4 +1,7 @@
 ﻿
+using System.ComponentModel;
+using System.Windows.Forms;
+
 namespace BackupCreator
 {
 	partial class Form1
@@ -6,7 +9,7 @@ namespace BackupCreator
 		/// <summary>
 		/// Required designer variable.
 		/// </summary>
-		private System.ComponentModel.IContainer components = null;
+		private IContainer components = null;
 
 		/// <summary>
 		/// Clean up any resources being used.
@@ -182,18 +185,18 @@ namespace BackupCreator
 
 		#endregion
 
-		private System.Windows.Forms.TextBox Source;
-		private System.Windows.Forms.TextBox Target;
-		private System.Windows.Forms.Label label1;
-		private System.Windows.Forms.Label label2;
-		private System.Windows.Forms.Button backup;
-		private System.Windows.Forms.Button selectSource;
-		private System.Windows.Forms.Button selectTarget;
-		private System.Windows.Forms.Label label3;
-		private System.Windows.Forms.TextBox Git;
-		private System.Windows.Forms.Button SelectGit;
-		private System.Windows.Forms.NotifyIcon notifyIcon1;
-		private System.Windows.Forms.Button Minimize;
+		private TextBox Source;
+		private TextBox Target;
+		private Label label1;
+		private Label label2;
+		private Button backup;
+		private Button selectSource;
+		private Button selectTarget;
+		private Label label3;
+		private TextBox Git;
+		private Button SelectGit;
+		private NotifyIcon notifyIcon1;
+		private Button Minimize;
 	}
 }
 

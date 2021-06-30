@@ -38,7 +38,7 @@ namespace BackupCreator
 			//Minimize_Click(null, null);
 		}
 
-		static void selectPath(System.Windows.Forms.TextBox textBox)
+		static void selectPath(TextBox textBox)
 		{
 			using (var fbd = new FolderBrowserDialog())
 			{

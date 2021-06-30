@@ -1,4 +1,5 @@
 ﻿using System;
+using System.IO;
 
 namespace AntiGitConsole
 {
@@ -14,7 +15,6 @@ namespace AntiGitConsole
 				ExecuteCommand(arg);
 			}
 
-			Console.WriteLine(_antigit.Info);
 			PrintStatus();
 			Console.WriteLine();
 			PrintCommands();
@@ -32,7 +32,7 @@ namespace AntiGitConsole
 			if (command.Length >= 2 && command[1] == '=')
 			{
 				var dir = command.Substring(2).Trim();
-				if (System.IO.Directory.Exists(dir) || dir == "")
+				if (Directory.Exists(dir) || dir == "")
 				{
 					if (command.StartsWith("s="))
 					{
