@@ -13,6 +13,7 @@ using System.Linq;
 using System.Runtime.InteropServices;
 #endif
 using System.Threading;
+using System.Threading.Tasks;
 
 namespace AntiGit
 {
@@ -83,9 +84,7 @@ namespace AntiGit
 			}, null, -1, -1);
 
 
-			//StartBackup();
 			SyncGit();
-
 		}
 
 		public struct SystemTime
@@ -136,13 +135,13 @@ namespace AntiGit
 		{
 			SystemTime st = new SystemTime
 			{
-				Year = (short) currentDateTime.Year,
-				Month = (short) currentDateTime.Month,
-				Day = (short) currentDateTime.Day,
-				Hour = (short) currentDateTime.Hour,
-				Minute = (short) currentDateTime.Minute,
-				Second = (short) currentDateTime.Second,
-				Milliseconds = (short) currentDateTime.Millisecond
+				Year = (short)currentDateTime.Year,
+				Month = (short)currentDateTime.Month,
+				Day = (short)currentDateTime.Day,
+				Hour = (short)currentDateTime.Hour,
+				Minute = (short)currentDateTime.Minute,
+				Second = (short)currentDateTime.Second,
+				Milliseconds = (short)currentDateTime.Millisecond
 			};
 			return SetSystemTime(ref st);
 		}
@@ -206,8 +205,17 @@ namespace AntiGit
 		}
 		public void SyncGit()
 		{
-			FullSyncGit(_sourceDir, _gitDir);
+			if (!string.IsNullOrEmpty(_gitDir))
+			{
+				if (!Directory.Exists(_gitDir))
+					WriteOutput("Git " + directoryNotFound);
+				else if (!Directory.Exists(_sourceDir))
+					WriteOutput("Source " + directoryNotFound);
+				else
+					FullSyncGit(_sourceDir, _gitDir);
+			}
 		}
+		private const string directoryNotFound = "directory not found";
 
 		private static string GetDefaultBackupPosition()
 		{
@@ -244,8 +252,11 @@ namespace AntiGit
 				{
 					LocalFiles = null;
 					_sourceDir = value;
-					CheckSourceAndGit();
 					setValue("source", value);
+					if (CheckSourceAndGit())
+					{
+						SyncGit();
+					}
 					//if (CheckSourceAndGit())
 					//	setValue("source", value);
 					//else
@@ -259,7 +270,16 @@ namespace AntiGit
 		public string TargetDir
 		{
 			get => _targetDir;
-			set { _targetDir = value; setValue("target", value); }
+			set
+			{
+				if (_targetDir != value)
+				{
+					_targetDir = value;
+					setValue("target", value);
+					if (!string.IsNullOrEmpty(_targetDir) && !Directory.Exists(_targetDir))
+						WriteOutput("Target " + directoryNotFound);
+				}
+			}
 
 		}
 		private string _gitDir;
@@ -273,8 +293,11 @@ namespace AntiGit
 				{
 					RemoteFiles = null;
 					_gitDir = value;
-					CheckSourceAndGit();
 					setValue("git", value);
+					if (CheckSourceAndGit())
+					{
+						SyncGit();
+					}
 					//if (CheckSourceAndGit())
 					//	setValue("git", value);
 					//else
@@ -304,17 +327,18 @@ namespace AntiGit
 				}
 				catch (Exception e)
 				{
-					_alert(e.Message);
+					Alert(e.Message);
+					return false;
 				}
 			}
-
 			return true;
 		}
 
 		private static void Alert(string message)
 		{
 			Console.WriteLine(message);
-			_alert?.Invoke(message);
+			if (_alert != null)
+				Task.Run(() => _alert?.Invoke(message));
 		}
 		private static Action<string> _alert;
 
@@ -517,7 +541,7 @@ namespace AntiGit
 						if (!Directory.Exists(Param1))
 						{
 							WriteOutput("link directory  " + Param2 + " => " + Param1);
-							CreateSymbolicLink(Param1, Param2, 1);
+							CreateSymbolicLink(Param1, Param2, 1); // The parameter 1 = directory
 							if (checkedIsAdmin == false)
 							{
 								checkedIsAdmin = true;
@@ -531,7 +555,8 @@ namespace AntiGit
 						break;
 					case TypeOfOperation.LinkFile:
 						WriteOutput("link " + Param2 + " => " + Param1);
-						CreateHardLink(Param1, Param2, IntPtr.Zero);
+						//CreateHardLink(Param1, Param2, IntPtr.Zero); // These files from windows cannot be copied easily from one device to another, you need to use the Xcopy command
+						CreateSymbolicLink(Param1, Param2, 0);// The parameter 0 = file
 						break;
 					case TypeOfOperation.CopyFile:
 						File.Copy(Param1, Param2, true);
@@ -616,58 +641,64 @@ namespace AntiGit
 		}
 
 		private Thread gitTask;
-		private int fullSyncCycle = 0;
-		private void FullSyncGit(string sourcePath, string targetPath)
+		private int fullSyncCycle;
+
+
+		private void FullSyncGit(string sourcePath, string gitPath)
 		{
+			gitTask = new Thread(() =>
+			 {
+				 fullSyncCycle = 0;
+				 _stopSync = false;
+				 while (!_stopSync)
+				 {
+					 if (!string.IsNullOrEmpty(sourcePath) && !string.IsNullOrEmpty(gitPath))
+					 {
+						 if (!IsSourceAndGitCompatible(new DirectoryInfo(sourcePath), new DirectoryInfo(gitPath)))
+						 {
+							 Alert("Warning: Git sync cannot be started because the source and git directories contain different projects. Check the settings!");
+							 return;
+						 }
 
-			var gitTask = new Thread(() =>
-				{
-					fullSyncCycle = 0;
-					_stopSync = false;
-					var memoryFile = new StringCollection();
-					while (!_stopSync)
-					{
-						if (!string.IsNullOrEmpty(sourcePath) && !string.IsNullOrEmpty(targetPath))
-						{
-							if (!IsSourceAndGitCompatible(new DirectoryInfo(sourcePath), new DirectoryInfo(targetPath)))
-							{
-								Alert("Warning: Git sync cannot be started because the source and git directories contain different projects. Check the settings!");
-								return;
-							}
-
-							var oldestFile = DateTime.MinValue;
-							var hasSynchronized = false;
+						 var oldestFile = DateTime.MinValue;
+						 var hasSynchronized = false;
+#if !DEBUG
 							try
 							{
-								SyncGit(ref oldestFile, ref hasSynchronized, Scan.LocalDrive, sourcePath, targetPath, ref memoryFile);
-								DeleteRemovedFiles(Scan.LocalDrive, memoryFile, sourcePath, targetPath);
-								SyncGit(ref oldestFile, ref hasSynchronized, Scan.RemoteDrive, targetPath, sourcePath, ref memoryFile);
-								DeleteRemovedFiles(Scan.RemoteDrive, memoryFile, sourcePath, targetPath);
-								fullSyncCycle++;
+#endif
+						 var memoryFile = new StringCollection();
+						 SyncGit(ref oldestFile, ref hasSynchronized, Scan.LocalDrive, sourcePath, gitPath, ref memoryFile);
+						 DeleteRemovedFiles(Scan.LocalDrive, memoryFile, sourcePath, gitPath);
+						 memoryFile = new StringCollection();
+						 SyncGit(ref oldestFile, ref hasSynchronized, Scan.RemoteDrive, gitPath, sourcePath, ref memoryFile);
+						 DeleteRemovedFiles(Scan.RemoteDrive, memoryFile, gitPath, sourcePath);
+						 fullSyncCycle++;
+#if !DEBUG
 							}
 							catch (Exception e)
 							{
 								// If the sync process fails, there will be an attempt in the next round
 								Debug.Write(e.Message);
 								Debugger.Break();
-							}
-							if (hasSynchronized)
-							{
-								_backupOfTheChange.Change(60000, -1);
-							}
+						}
+#endif
+						 if (hasSynchronized)
+						 {
+							 _backupOfTheChange.Change(60000, -1);
+						 }
 #if !DEBUG
 						// If I don't see any recent changes, loosen the monitoring of the files so as not to stress the disk
 						if ((DateTime.UtcNow - oldestFile).TotalMinutes > 30)
 							Thread.Sleep(60000);
 #endif
-						}
-						else
-						{
-							Thread.Sleep(60000);
-						}
-					}
-					_stopSync = true;
-				})
+					 }
+					 else
+					 {
+						 Thread.Sleep(60000);
+					 }
+				 }
+				 _stopSync = true;
+			 })
 			{ Priority = ThreadPriority.Lowest };
 			gitTask.Start();
 		}
@@ -720,7 +751,6 @@ namespace AntiGit
 
 		private StringCollection LocalFiles;
 		private StringCollection RemoteFiles;
-
 		void SyncGit(ref DateTime returnOldestFile, ref bool hasSynchronized, Scan scan, string sourcePath, string targetPath, ref StringCollection memoryFile, string sourceRoot = null, DateTime? compilationTime = null)
 		{
 			if (_stopSync)
@@ -728,7 +758,6 @@ namespace AntiGit
 			if (sourceRoot == null)
 			{
 				sourceRoot = sourcePath;
-				memoryFile.Clear();
 			}
 			var relativeDirName = sourcePath.Substring(sourceRoot.Length);
 			var targetDirName = targetPath + relativeDirName;
@@ -886,7 +915,7 @@ namespace AntiGit
 						removedFromSource.Add(oldMemoryFile);
 				}
 
-				if (fullSyncCycle != 0 && removedFromSource.Count > 1)
+				if (fullSyncCycle > 1 && removedFromSource.Count > 1)
 				{
 					Alert("More than one file has been deleted, for security reasons we will not synchronize if more than one file is deleted!");
 				}
@@ -1229,8 +1258,4 @@ namespace AntiGit
 			return total == 0 ? false : (double)find / (double)total > limit;
 		}
 	}
-
-
-
-
 }
