@@ -77,7 +77,7 @@ namespace AntiGit
 				}
 			}, null, TimeSpan.Zero, new TimeSpan(1, 0, 0, 0));
 
-			backupOfTheChange = new Timer((x) =>
+			_backupOfTheChange = new Timer((x) =>
 			{
 				StartBackup(false);
 			}, null, -1, -1);
@@ -134,14 +134,16 @@ namespace AntiGit
 #else
 		private bool SetDateTime(DateTime currentDateTime)
 		{
-			SystemTime st = new SystemTime();
-			st.Year = (short)currentDateTime.Year;
-			st.Month = (short)currentDateTime.Month;
-			st.Day = (short)currentDateTime.Day;
-			st.Hour = (short)currentDateTime.Hour;
-			st.Minute = (short)currentDateTime.Minute;
-			st.Second = (short)currentDateTime.Second;
-			st.Milliseconds = (short)currentDateTime.Millisecond;
+			SystemTime st = new SystemTime
+			{
+				Year = (short) currentDateTime.Year,
+				Month = (short) currentDateTime.Month,
+				Day = (short) currentDateTime.Day,
+				Hour = (short) currentDateTime.Hour,
+				Minute = (short) currentDateTime.Minute,
+				Second = (short) currentDateTime.Second,
+				Milliseconds = (short) currentDateTime.Millisecond
+			};
 			return SetSystemTime(ref st);
 		}
 		[DllImport("kernel32.dll", SetLastError = true)]
@@ -195,9 +197,9 @@ namespace AntiGit
 			}
 		}
 
-		private Timer backupOfTheChange;
+		private readonly Timer _backupOfTheChange;
 
-		static public void WriteOutput(string text)
+		public static void WriteOutput(string text)
 		{
 			Debug.WriteLine(text);
 			//Console.WriteLine(text);
@@ -230,7 +232,7 @@ namespace AntiGit
 			return null;
 		}
 
-		static string[] ExcludeDir = { "bin", "obj", ".vs", "packages" };
+		public static readonly string[] ExcludeDir = { "bin", "obj", ".vs", "packages" };
 
 		private string _sourceDir;
 		public string SourceDir
@@ -248,7 +250,7 @@ namespace AntiGit
 					//	setValue("source", value);
 					//else
 					//	_sourceDir = null;
-					
+
 				}
 			}
 		}
@@ -293,11 +295,11 @@ namespace AntiGit
 					var gitCount = git.GetFileSystemInfos().Length;
 					if (sourceCount != 0 && gitCount != 0)
 					{
-						if (!IsSourceAndGitCompatible(source, git))
-						{
-							Alert("Error: During the first setup Git and Source cannot contain files at the same time: If you want to synchronize this computer with the shared Git, then Git must contain the files and the Source directory must be empty. If you want to create a shared Git, then Git must be empty and Source must contain the files you want to share.");
-							return false;
-						}
+						//if (!IsSourceAndGitCompatible(source, git)) // This line has been removed to prevent a merge between different versions: If you use AntiGit it is good practice that the first programmer synchronizes their version on git, and everyone else creates their own version locally by cloning the Git one. This software does it automatically!
+						//{
+						Alert("Error: During the first setup Git and Source cannot contain files at the same time: If you want to synchronize this computer with the shared Git, then Git must contain the files and the Source directory must be empty. If you want to create a shared Git, then Git must be empty and Source must contain the files you want to share.");
+						return false;
+						//}
 					}
 				}
 				catch (Exception e)
@@ -309,14 +311,14 @@ namespace AntiGit
 			return true;
 		}
 
-		static private void Alert(string message)
+		private static void Alert(string message)
 		{
 			Console.WriteLine(message);
 			_alert?.Invoke(message);
 		}
 		private static Action<string> _alert;
 
-		private System.Threading.Timer backupTimer;
+		private Timer backupTimer;
 
 
 		private readonly DirectoryInfo _appDir = new DirectoryInfo(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData) + @"\AntiGit");
@@ -473,7 +475,7 @@ namespace AntiGit
 					{
 						if (!skipIfThereAreNoChanges || fileAreChanged)
 						{
-							Spooler.ForEach(operation => operation.execute());
+							Spooler.ForEach(operation => operation.Execute());
 						}
 					}
 				}
@@ -500,7 +502,7 @@ namespace AntiGit
 			public TypeOfOperation Operation = TypeOfOperation.Nothing;
 			public string Param1;
 			public string Param2;
-			public void execute()
+			public void Execute()
 			{
 				switch (Operation)
 				{
@@ -537,7 +539,7 @@ namespace AntiGit
 						break;
 				}
 			}
-			static private bool checkedIsAdmin;
+			private static bool checkedIsAdmin;
 		}
 
 		private static bool _requestAdmin;
@@ -565,7 +567,6 @@ namespace AntiGit
 
 			if (fileInfo1.Exists != fileInfo2.Exists)
 				return false;
-			bool result;
 
 			if (fileInfo1.Length != fileInfo2.Length)
 			{
@@ -615,52 +616,58 @@ namespace AntiGit
 		}
 
 		private Thread gitTask;
-
+		private int fullSyncCycle = 0;
 		private void FullSyncGit(string sourcePath, string targetPath)
 		{
-			var gitTask = new Thread(() =>
-			{
-				_stopSync = false;
-				while (!_stopSync)
-				{
-					if (!string.IsNullOrEmpty(sourcePath) && !string.IsNullOrEmpty(targetPath))
-					{
-						if (!IsSourceAndGitCompatible(new DirectoryInfo(sourcePath), new DirectoryInfo(targetPath)))
-						{
-							Alert("Warning: Git sync cannot be started because the source and git directories contain different projects. Check the settings!");
-							return;
-						}
 
-						var oldestFile = DateTime.MinValue;
-						var hasSynchronized = false;
-						try
+			var gitTask = new Thread(() =>
+				{
+					fullSyncCycle = 0;
+					_stopSync = false;
+					var memoryFile = new StringCollection();
+					while (!_stopSync)
+					{
+						if (!string.IsNullOrEmpty(sourcePath) && !string.IsNullOrEmpty(targetPath))
 						{
-							SyncGit(ref oldestFile, ref hasSynchronized, Scan.LocalDrive, sourcePath, targetPath);
-							SyncGit(ref oldestFile, ref hasSynchronized, Scan.RemoteDrive, targetPath, sourcePath);
-						}
-						catch (Exception e)
-						{
-							// If the sync process fails, there will be an attempt in the next round
-							Debug.Write(e.Message);
-							Debugger.Break();
-						}
-						if (hasSynchronized)
-						{
-							backupOfTheChange.Change(60000, -1);
-						}
+							if (!IsSourceAndGitCompatible(new DirectoryInfo(sourcePath), new DirectoryInfo(targetPath)))
+							{
+								Alert("Warning: Git sync cannot be started because the source and git directories contain different projects. Check the settings!");
+								return;
+							}
+
+							var oldestFile = DateTime.MinValue;
+							var hasSynchronized = false;
+							try
+							{
+								SyncGit(ref oldestFile, ref hasSynchronized, Scan.LocalDrive, sourcePath, targetPath, ref memoryFile);
+								DeleteRemovedFiles(Scan.LocalDrive, memoryFile, sourcePath, targetPath);
+								SyncGit(ref oldestFile, ref hasSynchronized, Scan.RemoteDrive, targetPath, sourcePath, ref memoryFile);
+								DeleteRemovedFiles(Scan.RemoteDrive, memoryFile, sourcePath, targetPath);
+								fullSyncCycle++;
+							}
+							catch (Exception e)
+							{
+								// If the sync process fails, there will be an attempt in the next round
+								Debug.Write(e.Message);
+								Debugger.Break();
+							}
+							if (hasSynchronized)
+							{
+								_backupOfTheChange.Change(60000, -1);
+							}
 #if !DEBUG
 						// If I don't see any recent changes, loosen the monitoring of the files so as not to stress the disk
 						if ((DateTime.UtcNow - oldestFile).TotalMinutes > 30)
 							Thread.Sleep(60000);
 #endif
+						}
+						else
+						{
+							Thread.Sleep(60000);
+						}
 					}
-					else
-					{
-						Thread.Sleep(60000);
-					}
-				}
-				_stopSync = true;
-			})
+					_stopSync = true;
+				})
 			{ Priority = ThreadPriority.Lowest };
 			gitTask.Start();
 		}
@@ -714,16 +721,14 @@ namespace AntiGit
 		private StringCollection LocalFiles;
 		private StringCollection RemoteFiles;
 
-		void SyncGit(ref DateTime returnOldestFile, ref bool hasSynchronized, Scan scan, string sourcePath, string targetPath, string sourceRoot = null, DateTime? compilationTime = null, StringCollection memoryFile = null)
+		void SyncGit(ref DateTime returnOldestFile, ref bool hasSynchronized, Scan scan, string sourcePath, string targetPath, ref StringCollection memoryFile, string sourceRoot = null, DateTime? compilationTime = null)
 		{
-			var isRoot = false;
 			if (_stopSync)
 				return;
 			if (sourceRoot == null)
 			{
-				isRoot = true;
 				sourceRoot = sourcePath;
-				memoryFile = new StringCollection();
+				memoryFile.Clear();
 			}
 			var relativeDirName = sourcePath.Substring(sourceRoot.Length);
 			var targetDirName = targetPath + relativeDirName;
@@ -737,8 +742,11 @@ namespace AntiGit
 				if (!dirTarget.Exists)
 				{
 					WriteOutput("create directory  " + targetDirName);
-					try { Directory.CreateDirectory(targetDirName);
-					}catch (Exception e) { WriteOutput(e.Message); }
+					try
+					{
+						Directory.CreateDirectory(targetDirName);
+					}
+					catch (Exception e) { WriteOutput(e.Message); }
 				}
 				else
 				{
@@ -820,7 +828,7 @@ namespace AntiGit
 								{
 									File.Copy(from.FullName, to.FullName, true);
 								}
-								catch (Exception ex) { WriteOutput( ex.Message ); }
+								catch (Exception ex) { WriteOutput(ex.Message); }
 #if DEBUG
 								var verify = new FileInfo(to.FullName);
 								if (RoundDate(verify.LastWriteTimeUtc) != RoundDate(from.LastWriteTimeUtc))
@@ -840,78 +848,78 @@ namespace AntiGit
 				}
 				foreach (var sourceDir in Directory.GetDirectories(sourcePath))
 				{
-					SyncGit(ref returnOldestFile, ref hasSynchronized, scan, sourceDir, targetPath, sourceRoot, compilationTime, memoryFile);
+					SyncGit(ref returnOldestFile, ref hasSynchronized, scan, sourceDir, targetPath, ref memoryFile, sourceRoot, compilationTime);
+				}
+			}
+		}
+
+		private void DeleteRemovedFiles(Scan scan, StringCollection memoryFile, string sourcePath, string targetPath)
+		{
+			// Check if any files or directories have been deleted
+			StringCollection oldMemoryFiles;
+
+			if (scan == Scan.LocalDrive)
+			{
+				oldMemoryFiles = LocalFiles;
+				if (MemoryFileIsChanged(LocalFiles, memoryFile))
+				{
+					SaveMemoryFile(memoryFile, sourcePath);
+				}
+				LocalFiles = memoryFile;
+			}
+			else
+			{
+				oldMemoryFiles = RemoteFiles;
+				if (MemoryFileIsChanged(RemoteFiles, memoryFile))
+				{
+					SaveMemoryFile(memoryFile, sourcePath);
+				}
+				RemoteFiles = memoryFile;
+			}
+
+			if (oldMemoryFiles != null)
+			{
+				var removedFromSource = new List<string>();
+				foreach (var oldMemoryFile in oldMemoryFiles)
+				{
+					if (!memoryFile.Contains(oldMemoryFile))
+						removedFromSource.Add(oldMemoryFile);
 				}
 
-				if (isRoot)
+				if (fullSyncCycle != 0 && removedFromSource.Count > 1)
 				{
-					// Check if any files or directories have been deleted
-					StringCollection oldMemoryFiles;
-
-					if (scan == Scan.LocalDrive)
+					Alert("More than one file has been deleted, for security reasons we will not synchronize if more than one file is deleted!");
+				}
+				else
+				{
+					foreach (var item in removedFromSource)
 					{
-						oldMemoryFiles = LocalFiles;
-						if (MemoryFileIsChanged(LocalFiles, memoryFile))
+						var target = targetPath + item.Substring(sourcePath.Length);
+						var fileInfo = new FileInfo(target);
+						if (fileInfo.Exists)
 						{
-							SaveMemoryFile(memoryFile, sourcePath );
-						}
-						LocalFiles = memoryFile;
-					}
-					else
-					{
-						oldMemoryFiles = RemoteFiles;
-						if (MemoryFileIsChanged(RemoteFiles, memoryFile))
-						{
-							SaveMemoryFile(memoryFile, sourcePath);
-						}
-						RemoteFiles = memoryFile;
-					}
+							try
+							{
+								fileInfo.Delete();
+							}
+							catch (Exception e)
+							{
+								WriteOutput(e.Message);
+							}
 
-					if (oldMemoryFiles != null)
-					{
-						var removedFromSource = new List<string>();
-						foreach (var oldMemoryFile in oldMemoryFiles)
-						{
-							if (!memoryFile.Contains(oldMemoryFile))
-								removedFromSource.Add(oldMemoryFile);
-						}
-
-						if (removedFromSource.Count > 1)
-						{
-							Alert("More than one file has been deleted, for security reasons we will not synchronize if more than one file is deleted!");
 						}
 						else
 						{
-							foreach (var item in removedFromSource)
+							var dirInfo = new FileInfo(target);
+							if (dirInfo.Exists)
 							{
-								var target = targetPath + item.Substring(sourcePath.Length);
-								var fileInfo = new FileInfo(target);
-								if (fileInfo.Exists)
+								try
 								{
-									try
-									{
-										fileInfo.Delete();
-									}
-									catch (Exception e)
-									{
-										WriteOutput(e.Message);
-									}
-
+									dirInfo.Delete();
 								}
-								else
+								catch (Exception e)
 								{
-									var dirInfo = new FileInfo(target);
-									if (dirInfo.Exists)
-									{
-										try
-										{
-											dirInfo.Delete();
-										}
-										catch (Exception e)
-										{
-											WriteOutput(e.Message);
-										}
-									}
+									WriteOutput(e.Message);
 								}
 							}
 						}
@@ -919,6 +927,8 @@ namespace AntiGit
 				}
 			}
 		}
+
+
 
 		private static bool MemoryFileIsChanged(StringCollection memory1, StringCollection memory2)
 		{
