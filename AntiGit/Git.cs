@@ -15,8 +15,7 @@ namespace AntiGit
 			Context = context;
 		}
 
-		private AntiGit Context;
-		private Thread gitTask;
+		private readonly AntiGit Context;
 		private int fullSyncCycle;
 
 
@@ -24,7 +23,7 @@ namespace AntiGit
 		{
 			LocalFiles = LoadMemoryFile(sourcePath);
 			RemoteFiles = LoadMemoryFile(gitPath);
-			gitTask = new Thread(() =>
+			Thread gitTask = new Thread(() =>
 			{
 				fullSyncCycle = 0;
 				_stopSync = false;

@@ -17,8 +17,8 @@ namespace AntiGit
 	public class AntiGit
 	{
 		public readonly string Info = "NOTE: The SOURCE directory is the one with the files to keep (your projects and your solutions must be here), in the TARGET directory the daily backups will be saved, the GIT directory is a remote directory accessible to all those who work on the same source files, for example, the git directory can correspond to a disk of network or to the address of a pen drive connected to the router, in this directory AntiGit will create a synchronized version of the source in real time.";
-		private Backup Backup;
-		private Git Git;
+		private readonly Backup Backup;
+		private readonly Git Git;
 
 		public AntiGit(Action<string> alert = null)
 		{
