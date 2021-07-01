@@ -250,6 +250,7 @@ namespace AntiGit
 						}
 						catch (Exception e)
 						{
+							AntiGit.WriteOutput(e.Message);
 						}
 					}
 				}
@@ -454,6 +455,7 @@ namespace AntiGit
 			catch (Exception e)
 			{
 				// If the attempt fails it will be updated to the next round!
+				AntiGit.WriteOutput(e.Message);
 			}
 		}
 
@@ -607,6 +609,7 @@ namespace AntiGit
 				}
 				catch (Exception e)
 				{
+					AntiGit.WriteOutput(e.Message);
 				}
 			}
 #endif
