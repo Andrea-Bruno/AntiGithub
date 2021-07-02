@@ -6,6 +6,8 @@ using System.Linq;
 using System.Threading;
 #if !MAC
 using System.Runtime.InteropServices;
+#else
+using System.Diagnostics;
 #endif
 
 namespace AntiGit
@@ -15,28 +17,19 @@ namespace AntiGit
 #if MAC
 		static int CreateSymbolicLink(string lpSymlinkFileName, string lpTargetFileName, int dwFlags)
 		{
-			ExecuteMacCommand("ln -s \"" + lpTargetFileName + "\" \"" + lpSymlinkFileName + "\"");
+			ExecuteMacCommand("ln","-s \"" + lpTargetFileName + "\" \"" + lpSymlinkFileName + "\"");
 			return 0;
 		}
 		static bool CreateHardLink(string lpFileName, string lpExistingFileName, IntPtr lpSecurityAttributes)
 		{
-			ExecuteMacCommand("ln \"" + lpExistingFileName + "\" \"" + lpFileName + "\"");
+			ExecuteMacCommand("ln"," \"" + lpExistingFileName + "\" \"" + lpFileName + "\"");
 			return true;
 		}
-		public static void ExecuteMacCommand(string command, bool hidden = true)
+		public static void ExecuteMacCommand(string command, string arguments, bool hidden = true)
 		{
-			Process proc = new Process();
-			proc.StartInfo.FileName = @"/System/Applications/Utilities/Terminal.app/Contents/MacOS/Terminal";
-			proc.StartInfo.Arguments = "-c \" " + command + " \"";
-			proc.StartInfo.UseShellExecute = false;
-			proc.StartInfo.RedirectStandardOutput = true;
-			proc.StartInfo.CreateNoWindow = hidden;
+			var proc = new Process {StartInfo = {FileName = command, Arguments = arguments}};
 			proc.Start();
-
-			while (!proc.StandardOutput.EndOfStream)
-			{
-				WriteOutput(proc.StandardOutput.ReadLine());
-			}
+			proc.WaitForExit();
 		}
 #else
 		[DllImport("kernel32.dll", EntryPoint = "CreateSymbolicLinkW", CharSet = CharSet.Unicode, SetLastError = true)]
@@ -71,7 +64,9 @@ namespace AntiGit
 						AntiGit.WriteOutput("Target not found!");
 						return;
 					}
-
+					var readmeFile = Path.Combine(TargetDir, "readme.txt");
+					if (!File.Exists(readmeFile))
+						File.WriteAllText(readmeFile, "To restore the backup you need to copy the desired version where you prefer, via the command line (copy and paste does not work)");
 					backupThread = new Thread(() =>
 					{
 						LastBackup = DateTime.UtcNow;
@@ -246,8 +241,9 @@ namespace AntiGit
 						break;
 					case TypeOfOperation.LinkFile:
 						//AntiGit.WriteOutput("link " + Param2 + " => " + Param1);
-						//CreateHardLink(Param1, Param2, IntPtr.Zero); // These files from windows cannot be copied easily from one device to another, you need to use the Xcopy command
-						CreateSymbolicLink(Param1, Param2, 0);// The parameter 0 = file
+						// These files from cannot be copied easily, you need to use the terminal command
+						CreateHardLink(Param1, Param2, IntPtr.Zero);
+						//CreateSymbolicLink(Param1, Param2, 0);// The parameter 0 = file
 						break;
 					case TypeOfOperation.CopyFile:
 						File.Copy(Param1, Param2, true);

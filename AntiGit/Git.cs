@@ -148,7 +148,7 @@ namespace AntiGit
 				FileInfo[] targetFiles = null;
 				if (!dirTarget.Exists)
 				{
-					AntiGit.WriteOutput("create directory  " + targetDirName);
+					//AntiGit.WriteOutput("create directory  " + targetDirName);
 					try
 					{
 						Directory.CreateDirectory(targetDirName);
@@ -236,6 +236,10 @@ namespace AntiGit
 									File.Copy(from.FullName, to.FullName, true);
 								}
 								catch (Exception ex) { AntiGit.WriteOutput(ex.Message); }
+#if MAC
+								File.SetCreationTimeUtc(to.FullName, from.CreationTimeUtc); // bug: If I don't change this parameter the next command has no effect!
+								File.SetLastWriteTimeUtc(to.FullName, from.CreationTimeUtc);
+#endif
 #if DEBUG
 								var verify = new FileInfo(to.FullName);
 								if (RoundDate(verify.LastWriteTimeUtc) != RoundDate(from.LastWriteTimeUtc))
@@ -334,8 +338,6 @@ namespace AntiGit
 				}
 			}
 		}
-
-
 
 		private static bool MemoryFileIsChanged(StringCollection memory1, StringCollection memory2)
 		{
@@ -535,8 +537,11 @@ namespace AntiGit
 		{
 			// FAT / VFAT has a maximum resolution of 2s
 			// NTFS has a maximum resolution of 100 ns
-
+#if MAC
+			var add = 0;
+#else
 			var add = dt.Millisecond < 500 ? 0 : 1; // 0 - 499 round to lowers, 500 - 999 to upper
+#endif
 			return new DateTime(dt.Year, dt.Month, dt.Day, dt.Hour, dt.Minute, dt.Second + add);
 		}
 

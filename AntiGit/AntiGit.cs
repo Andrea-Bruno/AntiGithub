@@ -36,7 +36,7 @@ namespace AntiGit
 			setCurrentDateTime();
 			backupTimer = new Timer(x =>
 			{
-				if (Backup.LastBackup.Day != DateTime.UtcNow.Day)
+				if (new DateTime( Backup.LastBackup.Year, Backup.LastBackup.Month, Backup.LastBackup.Day) != new DateTime(DateTime.UtcNow.Year, DateTime.UtcNow.Month, DateTime.UtcNow.Day))
 				{
 					StartBackup();
 				}
