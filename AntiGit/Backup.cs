@@ -39,11 +39,11 @@ namespace AntiGit
 		private static extern bool CreateHardLink(string lpFileName, string lpExistingFileName, IntPtr lpSecurityAttributes);
 #endif
 
-		public Backup(AntiGit context)
+		public Backup(Context context)
 		{
 			Context = context;
 		}
-		private readonly AntiGit Context;
+		private readonly Context Context;
 		internal DateTime LastBackup;
 		private Thread backupThread;
 		internal bool BackupRunning;
@@ -56,17 +56,17 @@ namespace AntiGit
 				{
 					if (!new DirectoryInfo(SourceDir).Exists)
 					{
-						AntiGit.WriteOutput("Source not found!");
+						Context.WriteOutput(Resources.Dictionary.SourceNotFound);
 						return;
 					}
 					if (!new DirectoryInfo(TargetDir).Exists)
 					{
-						AntiGit.WriteOutput("Target not found!");
+						Context.WriteOutput(Resources.Dictionary.TargetNotFound);
 						return;
 					}
 					var readmeFile = Path.Combine(TargetDir, "readme.txt");
 					if (!File.Exists(readmeFile))
-						File.WriteAllText(readmeFile, "To restore the backup you need to copy the desired version where you prefer, via the command line (copy and paste does not work)");
+						File.WriteAllText(readmeFile, Resources.Dictionary.Instruction1);
 					backupThread = new Thread(() =>
 					{
 						LastBackup = DateTime.UtcNow;
@@ -140,7 +140,7 @@ namespace AntiGit
 
 				var dir = new DirectoryInfo(sourcePath);
 				var nameDir = dir.Name.ToLower();
-				if (!AntiGit.ExcludeDir.Contains(nameDir) && (dir.Attributes & FileAttributes.Hidden) == 0)
+				if (!Context.ExcludeDir.Contains(nameDir) && (dir.Attributes & FileAttributes.Hidden) == 0)
 				{
 					var relativeDirName = sourcePath.Substring(sourceRoot.Length);
 					var targetDirName = targetPath + relativeDirName;
@@ -190,9 +190,12 @@ namespace AntiGit
 					}
 				}
 			}
-			catch (Exception ex)
+			catch (Exception e)
 			{
-				AntiGit.WriteOutput(ex.Message);
+				if (Support.IsDiskFull(e))
+					Context.Alert(e.Message, true);
+				else
+					Context.WriteOutput(e.Message);
 			}
 			return fileAreChanged;
 		}
@@ -219,14 +222,14 @@ namespace AntiGit
 					case TypeOfOperation.CreateDirectory:
 						if (!Directory.Exists(Param1))
 						{
-							//AntiGit.WriteOutput("create directory  " + Param1);
+							//Context.WriteOutput("create directory  " + Param1);
 							Directory.CreateDirectory(Param1);
 						}
 						break;
 					case TypeOfOperation.LinkDirectory:
 						if (!Directory.Exists(Param1))
 						{
-							//AntiGit.WriteOutput("link directory  " + Param2 + " => " + Param1);
+							//Context.WriteOutput("link directory  " + Param2 + " => " + Param1);
 							CreateSymbolicLink(Param1, Param2, 1); // The parameter 1 = directory
 							if (checkedIsAdmin == false)
 							{
@@ -234,20 +237,20 @@ namespace AntiGit
 								var dir = new DirectoryInfo(Param1);
 								if (!dir.Exists)
 								{
-									AntiGit.RequestAdministrationMode();
+									Context.RequestAdministrationMode();
 								}
 							}
 						}
 						break;
 					case TypeOfOperation.LinkFile:
-						//AntiGit.WriteOutput("link " + Param2 + " => " + Param1);
+						//Context.WriteOutput("link " + Param2 + " => " + Param1);
 						// These files from cannot be copied easily, you need to use the terminal command
 						CreateHardLink(Param1, Param2, IntPtr.Zero);
 						//CreateSymbolicLink(Param1, Param2, 0);// The parameter 0 = file
 						break;
 					case TypeOfOperation.CopyFile:
 						File.Copy(Param1, Param2, true);
-						//AntiGit.WriteOutput("copy " + Param1 + " => " + Param2);
+						//Context.WriteOutput("copy " + Param1 + " => " + Param2);
 						break;
 				}
 			}

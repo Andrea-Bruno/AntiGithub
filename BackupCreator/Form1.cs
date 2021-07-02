@@ -7,7 +7,7 @@ namespace BackupCreator
 	{
 
 
-		public AntiGit.AntiGit AntiGithub;
+		public AntiGit.Context AntiGithub;
 
 		public Form1()
 		{
@@ -31,7 +31,7 @@ namespace BackupCreator
 			{
 				MessageBox.Show(Message);
 			}
-			AntiGithub = new AntiGit.AntiGit(Alert);
+			AntiGithub = new AntiGit.Context(Alert);
 			Source.Text = AntiGithub.SourceDir;
 			Target.Text = AntiGithub.TargetDir;
 			Git.Text = AntiGithub.GitDir;

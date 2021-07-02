@@ -14,13 +14,13 @@ using System.Runtime.InteropServices;
 
 namespace AntiGit
 {
-	public class AntiGit
+	public class Context
 	{
-		public readonly string Info = "NOTE: The SOURCE directory is the one with the files to keep (your projects and your solutions must be here), in the TARGET directory the daily backups will be saved, the GIT directory is a remote directory accessible to all those who work on the same source files, for example, the git directory can correspond to a disk of network or to the address of a pen drive connected to the router, in this directory AntiGit will create a synchronized version of the source in real time.";
-		private Backup Backup;
-		private Git Git;
+		public readonly string Info = "NOTE: The SOURCE directory is the one with the files to keep (your projects and your solutions must be here), in the TARGET directory the daily backups will be saved, the GIT directory is a remote directory accessible to all those who work on the same source files, for example, the git directory can correspond to a disk of network or to the address of a pen drive connected to the router, in this directory Context will create a synchronized version of the source in real time.";
+		private readonly Backup Backup;
+		private readonly Git Git;
 
-		public AntiGit(Action<string> alert = null)
+		public Context(Action<string> alert = null)
 		{
 			WriteOutput(Info);
 			Backup = new Backup(this);
@@ -36,7 +36,7 @@ namespace AntiGit
 			setCurrentDateTime();
 			backupTimer = new Timer(x =>
 			{
-				if (new DateTime( Backup.LastBackup.Year, Backup.LastBackup.Month, Backup.LastBackup.Day) != new DateTime(DateTime.UtcNow.Year, DateTime.UtcNow.Month, DateTime.UtcNow.Day))
+				if (new DateTime(Backup.LastBackup.Year, Backup.LastBackup.Month, Backup.LastBackup.Day) != new DateTime(DateTime.UtcNow.Year, DateTime.UtcNow.Month, DateTime.UtcNow.Day))
 				{
 					StartBackup();
 				}
@@ -95,10 +95,10 @@ namespace AntiGit
 		}
 
 #if MAC
-    // write here apple macOS code to change System Date Time
+		// write here apple macOS code to change System Date Time
 		private bool SetDateTime(DateTime currentDateTime)
 		{
-			return	true;
+			return true;
 		}
 
 #else
@@ -206,12 +206,10 @@ namespace AntiGit
 				}
 				return result;
 			}
-			catch (Exception)
+			catch (Exception e)
 			{
-
-
+				WriteOutput(e.Message);
 			}
-
 			return null;
 		}
 
@@ -290,9 +288,9 @@ namespace AntiGit
 					var gitCount = git.GetFileSystemInfos().Length;
 					if (sourceCount != 0 && gitCount != 0)
 					{
-						//if (!IsSourceAndGitCompatible(source, git)) // This line has been removed to prevent a merge between different versions: If you use AntiGit it is good practice that the first programmer synchronizes their version on git, and everyone else creates their own version locally by cloning the Git one. This software does it automatically!
+						//if (!IsSourceAndGitCompatible(source, git)) // This line has been removed to prevent a merge between different versions: If you use Context it is good practice that the first programmer synchronizes their version on git, and everyone else creates their own version locally by cloning the Git one. This software does it automatically!
 						//{
-						Alert("Error: During the first setup Git and Source cannot contain files at the same time: If you want to synchronize this computer with the shared Git, then Git must contain the files and the Source directory must be empty. If you want to create a shared Git, then Git must be empty and Source must contain the files you want to share.");
+						Alert(Resources.Dictionary.Error1);
 						return false;
 						//}
 					}
@@ -306,10 +304,12 @@ namespace AntiGit
 			return true;
 		}
 
-		internal static void Alert(string message)
+		internal static void Alert(string message, bool waitClick = false)
 		{
 			Console.WriteLine(message);
-			if (_alert != null)
+			if (waitClick)
+				_alert?.Invoke(message);
+			else if (_alert != null)
 				Task.Run(() => _alert?.Invoke(message));
 		}
 		private static Action<string> _alert;
@@ -317,7 +317,7 @@ namespace AntiGit
 		private Timer backupTimer;
 
 
-		internal static readonly DirectoryInfo AppDir = new DirectoryInfo(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData) + @"\AntiGit");
+		internal static readonly DirectoryInfo AppDir = new DirectoryInfo(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData) + @"\Context");
 
 		private string getValue(string name)
 		{
@@ -339,7 +339,7 @@ namespace AntiGit
 		internal static void RequestAdministrationMode()
 		{
 			if (_requestAdmin) return;
-			Alert("Error: The application must be run in administrator mode");
+			Alert(Resources.Dictionary.Error2);
 			_requestAdmin = true;
 		}
 

@@ -10,14 +10,14 @@ namespace AntiGit
 {
 	class Git
 	{
-		public Git(AntiGit context)
+		public Git(Context context)
 		{
 			Context = context;
 		}
 
-		private AntiGit Context;
+		private readonly Context Context;
 		private Thread gitTask;
-		private int fullSyncCycle;
+		private int FullSyncCycle;
 
 
 		internal void FullSyncGit(string sourcePath, string gitPath)
@@ -26,7 +26,7 @@ namespace AntiGit
 			RemoteFiles = LoadMemoryFile(gitPath);
 			gitTask = new Thread(() =>
 			{
-				fullSyncCycle = 0;
+				FullSyncCycle = 0;
 				_stopSync = false;
 				while (!_stopSync)
 				{
@@ -34,7 +34,7 @@ namespace AntiGit
 					{
 						if (!IsSourceAndGitCompatible(new DirectoryInfo(sourcePath), new DirectoryInfo(gitPath)))
 						{
-							AntiGit.Alert("Warning: Git sync cannot be started because the source and git directories contain different projects. Check the settings!");
+							Context.Alert(Resources.Dictionary.Warning1);
 							return;
 						}
 
@@ -50,7 +50,7 @@ namespace AntiGit
 						memoryFile = new StringCollection();
 						SyncGit(ref oldestFile, ref hasSynchronized, Scan.RemoteDrive, gitPath, sourcePath, ref memoryFile);
 						DeleteRemovedFiles(Scan.RemoteDrive, memoryFile, gitPath, sourcePath);
-						fullSyncCycle++;
+						FullSyncCycle++;
 #if !DEBUG
 							}
 							catch (Exception e)
@@ -142,18 +142,18 @@ namespace AntiGit
 
 			var dir = new DirectoryInfo(sourcePath);
 			var nameDir = dir.Name.ToLower();
-			if (!AntiGit.ExcludeDir.Contains(nameDir) && (dir.Attributes & FileAttributes.Hidden) == 0)
+			if (!Context.ExcludeDir.Contains(nameDir) && (dir.Attributes & FileAttributes.Hidden) == 0)
 			{
 				var dirTarget = new DirectoryInfo(targetDirName);
 				FileInfo[] targetFiles = null;
 				if (!dirTarget.Exists)
 				{
-					//AntiGit.WriteOutput("create directory  " + targetDirName);
+					//Context.WriteOutput("create directory  " + targetDirName);
 					try
 					{
 						Directory.CreateDirectory(targetDirName);
 					}
-					catch (Exception e) { AntiGit.WriteOutput(e.Message); }
+					catch (Exception e) { Context.WriteOutput(e.Message); }
 				}
 				else
 				{
@@ -224,18 +224,18 @@ namespace AntiGit
 							var visualStudioRecoveryFile = (copy == CopyType.CopyFromRemote && compilationTime != null) ? FindVisualStudioRecoveryFile(to) : null; //NOTE: compilationTime != null is the file is a visual studio file
 							if (copy == CopyType.CopyFromRemote && IsTextFiles(from) && (visualStudioRecoveryFile != null || MyPendingFiles.Contain(to)))
 							{
-								//AntiGit.WriteOutput("Merge " + @from.FullName + " => " + to.FullName);
+								//Context.WriteOutput("Merge " + @from.FullName + " => " + to.FullName);
 								Merge(from, to, visualStudioRecoveryFile);
 								hasSynchronized = true;
 							}
 							else
 							{
-								//AntiGit.WriteOutput("copy " + @from.FullName + " => " + to.FullName);
+								//Context.WriteOutput("copy " + @from.FullName + " => " + to.FullName);
 								try
 								{
 									File.Copy(from.FullName, to.FullName, true);
 								}
-								catch (Exception ex) { AntiGit.WriteOutput(ex.Message); }
+								catch (Exception e) { Context.WriteOutput(e.Message); }
 #if MAC
 								File.SetCreationTimeUtc(to.FullName, from.CreationTimeUtc); // bug: If I don't change this parameter the next command has no effect!
 								File.SetLastWriteTimeUtc(to.FullName, from.CreationTimeUtc);
@@ -254,6 +254,9 @@ namespace AntiGit
 						}
 						catch (Exception e)
 						{
+							// If the attempt fails it will be updated to the next round!
+							if (Support.IsDiskFull(e))
+								Context.Alert(e.Message, true);
 						}
 					}
 				}
@@ -297,9 +300,9 @@ namespace AntiGit
 						removedFromSource.Add(oldMemoryFile);
 				}
 
-				if (fullSyncCycle > 1 && removedFromSource.Count > 1)
+				if (FullSyncCycle > 1 && removedFromSource.Count > 1)
 				{
-					AntiGit.Alert("More than one file has been deleted, for security reasons we will not synchronize if more than one file is deleted!");
+					Context.Alert("More than one file has been deleted, for security reasons we will not synchronize if more than one file is deleted!");
 				}
 				else
 				{
@@ -315,7 +318,7 @@ namespace AntiGit
 							}
 							catch (Exception e)
 							{
-								AntiGit.WriteOutput(e.Message);
+								Context.WriteOutput(e.Message);
 							}
 
 						}
@@ -330,7 +333,7 @@ namespace AntiGit
 								}
 								catch (Exception e)
 								{
-									AntiGit.WriteOutput(e.Message);
+									Context.WriteOutput(e.Message);
 								}
 							}
 						}
@@ -362,7 +365,7 @@ namespace AntiGit
 		{
 			if (memory != null && !string.IsNullOrEmpty(path))
 			{
-				var file = Path.Combine(AntiGit.AppDir.FullName, GetHashCode(path) + ".txt");
+				var file = Path.Combine(Context.AppDir.FullName, GetHashCode(path) + ".txt");
 				File.WriteAllLines(file, memory.Cast<string>().ToArray());
 			}
 		}
@@ -371,7 +374,7 @@ namespace AntiGit
 		{
 			if (!string.IsNullOrEmpty(path))
 			{
-				var file = Path.Combine(AntiGit.AppDir.FullName, GetHashCode(path) + ".txt");
+				var file = Path.Combine(Context.AppDir.FullName, GetHashCode(path) + ".txt");
 				var fileInfo = new FileInfo(file);
 				if (fileInfo.Exists)
 				{
@@ -384,7 +387,7 @@ namespace AntiGit
 		{
 			if (!string.IsNullOrEmpty(path))
 			{
-				var file = Path.Combine(AntiGit.AppDir.FullName, GetHashCode(path) + ".txt");
+				var file = Path.Combine(Context.AppDir.FullName, GetHashCode(path) + ".txt");
 				if (new FileInfo(file).Exists)
 				{
 					var list = File.ReadAllLines(file);
@@ -456,6 +459,8 @@ namespace AntiGit
 			catch (Exception e)
 			{
 				// If the attempt fails it will be updated to the next round!
+				if (Support.IsDiskFull(e))
+					Context.Alert(e.Message, true);
 			}
 		}
 
@@ -592,7 +597,7 @@ namespace AntiGit
 					if (VisualStudioBackupFile.Count != 0 && !_showVBSuggest)
 					{
 						_showVBSuggest = true;
-						AntiGit.WriteOutput("Suggest: It is recommended setting Visual Studio Auto Recovery to 1 minute: tools->Options->Environment-AutoRecover");
+						Context.WriteOutput(Resources.Dictionary.Suggest1);
 					}
 
 					//var candidates = vsDir.GetFiles("~AutoRecover." + original.Name + "*", SearchOption.AllDirectories);

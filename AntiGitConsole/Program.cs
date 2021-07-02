@@ -6,7 +6,7 @@ namespace AntiGitConsole
 	class Program
 	{
 
-		static readonly AntiGit.AntiGit _antigit = new AntiGit.AntiGit();
+		static readonly AntiGit.Context _antigit = new AntiGit.Context();
 
 		static void Main(string[] args)
 		{
