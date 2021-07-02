@@ -6,8 +6,6 @@ using System.Linq;
 using System.Threading;
 #if !MAC
 using System.Runtime.InteropServices;
-#else
-using System.Diagnostics;
 #endif
 
 namespace AntiGit
@@ -17,19 +15,13 @@ namespace AntiGit
 #if MAC
 		static int CreateSymbolicLink(string lpSymlinkFileName, string lpTargetFileName, int dwFlags)
 		{
-			ExecuteMacCommand("ln","-s \"" + lpTargetFileName + "\" \"" + lpSymlinkFileName + "\"");
+			Support.ExecuteMacCommand("ln", "-s \"" + lpTargetFileName + "\" \"" + lpSymlinkFileName + "\"");
 			return 0;
 		}
 		static bool CreateHardLink(string lpFileName, string lpExistingFileName, IntPtr lpSecurityAttributes)
 		{
-			ExecuteMacCommand("ln"," \"" + lpExistingFileName + "\" \"" + lpFileName + "\"");
+			Support.ExecuteMacCommand("ln", " \"" + lpExistingFileName + "\" \"" + lpFileName + "\"");
 			return true;
-		}
-		public static void ExecuteMacCommand(string command, string arguments, bool hidden = true)
-		{
-			var proc = new Process {StartInfo = {FileName = command, Arguments = arguments}};
-			proc.Start();
-			proc.WaitForExit();
 		}
 #else
 		[DllImport("kernel32.dll", EntryPoint = "CreateSymbolicLinkW", CharSet = CharSet.Unicode, SetLastError = true)]

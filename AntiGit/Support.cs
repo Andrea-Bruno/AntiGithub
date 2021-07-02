@@ -1,11 +1,18 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Text;
+using System.Diagnostics;
 
 namespace AntiGit
 {
 	static class Support
 	{
+#if MAC
+		public static void ExecuteMacCommand(string command, string arguments)
+		{
+			var proc = new Process { StartInfo = { FileName = command, Arguments = arguments } };
+			proc.Start();
+			proc.WaitForExit();
+		}
+#endif
 		public static bool IsDiskFull(Exception ex)
 		{
 			const int HR_ERROR_HANDLE_DISK_FULL = unchecked((int)0x80070027);

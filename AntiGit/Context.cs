@@ -96,13 +96,15 @@ namespace AntiGit
 
 #if MAC
 		// write here apple macOS code to change System Date Time
-		private bool SetDateTime(DateTime currentDateTime)
+		private static bool SetDateTime(DateTime currentDateTime)
 		{
+			//https://bensmann.no/changing-system-date-from-terminal-os-x-recovery/
+			Support.ExecuteMacCommand("date", "-u " + currentDateTime.ToString("MMddHHmmyy"));
 			return true;
 		}
 
 #else
-		private bool SetDateTime(DateTime currentDateTime)
+		private static bool SetDateTime(DateTime currentDateTime)
 		{
 			SystemTime st = new SystemTime
 			{
