@@ -61,6 +61,33 @@ namespace AntiGit.Resources {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to I fixed the system clock!.
+        /// </summary>
+        internal static string ClockFixed {
+            get {
+                return ResourceManager.GetString("ClockFixed", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to the computer clock is.
+        /// </summary>
+        internal static string ComputerClockIs {
+            get {
+                return ResourceManager.GetString("ComputerClockIs", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to directory not found.
+        /// </summary>
+        internal static string DirectoryNotFound {
+            get {
+                return ResourceManager.GetString("DirectoryNotFound", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Error: During the first setup Git and Source cannot contain files at the same time: If you want to synchronize this computer with the shared Git, then Git must contain the files and the Source directory must be empty. If you want to create a shared Git, then Git must be empty and Source must contain the files you want to share..
         /// </summary>
         internal static string Error1 {
@@ -79,11 +106,29 @@ namespace AntiGit.Resources {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to NOTE: The SOURCE directory is the one with the files to keep (your projects and your solutions must be here), in the TARGET directory the daily backups will be saved, the GIT directory is a remote directory accessible to all those who work on the same source files, for example, the git directory can correspond to a disk of network or to the address of a pen drive connected to the router, in this directory Context will create a synchronized version of the source in real time..
+        /// </summary>
+        internal static string Info {
+            get {
+                return ResourceManager.GetString("Info", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to To restore the backup you need to copy the desired version where you prefer, via the command line (copy and paste does not work).
         /// </summary>
         internal static string Instruction1 {
             get {
                 return ResourceManager.GetString("Instruction1", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to &quot;Please adjust the system clock!&quot;.
+        /// </summary>
+        internal static string PleaseAdjustClock {
+            get {
+                return ResourceManager.GetString("PleaseAdjustClock", resourceCulture);
             }
         }
         
@@ -111,6 +156,24 @@ namespace AntiGit.Resources {
         internal static string TargetNotFound {
             get {
                 return ResourceManager.GetString("TargetNotFound", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The current computer time is incorrect: It is.
+        /// </summary>
+        internal static string TimeIncorrect {
+            get {
+                return ResourceManager.GetString("TimeIncorrect", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The current time could not be checked online.
+        /// </summary>
+        internal static string TimeNotCheckedOnline {
+            get {
+                return ResourceManager.GetString("TimeNotCheckedOnline", resourceCulture);
             }
         }
         

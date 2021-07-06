@@ -16,7 +16,7 @@ namespace AntiGit
 {
 	public class Context
 	{
-		public readonly string Info = "NOTE: The SOURCE directory is the one with the files to keep (your projects and your solutions must be here), in the TARGET directory the daily backups will be saved, the GIT directory is a remote directory accessible to all those who work on the same source files, for example, the git directory can correspond to a disk of network or to the address of a pen drive connected to the router, in this directory Context will create a synchronized version of the source in real time.";
+		public readonly string Info = Resources.Dictionary.Info;
 		private readonly Backup Backup;
 		private readonly Git Git;
 
@@ -33,7 +33,7 @@ namespace AntiGit
 				_targetDir = GetDefaultBackupPosition();
 			_gitDir = getValue("git");
 
-			setCurrentDateTime();
+			SetCurrentDateTime();
 			backupTimer = new Timer(x =>
 			{
 				if (new DateTime(Backup.LastBackup.Year, Backup.LastBackup.Month, Backup.LastBackup.Day) != new DateTime(DateTime.UtcNow.Year, DateTime.UtcNow.Month, DateTime.UtcNow.Day))
@@ -70,27 +70,27 @@ namespace AntiGit
 			public short Milliseconds;
 		}
 
-		private void setCurrentDateTime()
+		private void SetCurrentDateTime()
 		{
 			if (GetAverageDateTimeFromWeb(out var currentDateTime))
 			{
 				if (Math.Abs((DateTime.UtcNow - currentDateTime).TotalSeconds) >= 3)
 				{
-					WriteOutput("The current computer time is incorrect: It is " + currentDateTime.ToLocalTime().ToString("HH mm ss") + " the computer clock is " + DateTime.Now.ToString("HH mm ss"));
+					WriteOutput(Resources.Dictionary.TimeIncorrect + " " + currentDateTime.ToLocalTime().ToString("HH mm ss") + " " + Resources.Dictionary.ComputerClockIs + " " + DateTime.Now.ToString("HH mm ss"));
 					if (SetDateTime(currentDateTime))
 					{
-						WriteOutput("I fixed the system clock!");
+						WriteOutput(Resources.Dictionary.ClockFixed);
 					}
 					else
 					{
-						WriteOutput("Please adjust the system clock!");
+						WriteOutput(Resources.Dictionary.PleaseAdjustClock);
 						RequestAdministrationMode();
 					}
 				}
 			}
 			else
 			{
-				WriteOutput("The current time could not be checked online");
+				WriteOutput(Resources.Dictionary.TimeNotCheckedOnline);
 			}
 		}
 
@@ -185,14 +185,13 @@ namespace AntiGit
 			if (!string.IsNullOrEmpty(_gitDir))
 			{
 				if (!Directory.Exists(_gitDir))
-					WriteOutput("Git " + directoryNotFound);
+					WriteOutput("Git " + Resources.Dictionary.DirectoryNotFound);
 				else if (!Directory.Exists(_sourceDir))
-					WriteOutput("Source " + directoryNotFound);
+					WriteOutput("Source " + Resources.Dictionary.DirectoryNotFound);
 				else
 					Git.FullSyncGit(_sourceDir, _gitDir);
 			}
 		}
-		private const string directoryNotFound = "directory not found";
 
 		private static string GetDefaultBackupPosition()
 		{
@@ -250,7 +249,7 @@ namespace AntiGit
 					_targetDir = value;
 					setValue("target", value);
 					if (!string.IsNullOrEmpty(_targetDir) && !Directory.Exists(_targetDir))
-						WriteOutput("Target " + directoryNotFound);
+						WriteOutput("Target " + Resources.Dictionary.DirectoryNotFound);
 				}
 			}
 
