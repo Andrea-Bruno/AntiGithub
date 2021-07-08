@@ -26,8 +26,6 @@ namespace AntiGit
 			WriteOutput(Info);
 			Backup = new Backup(this);
 			Git = new Git(this);
-			Git.Merge(new FileInfo(@"C:\Users\USER\OneDrive\Рабочий стол\x\b.txt"), new  FileInfo(@"C:\Users\USER\OneDrive\Рабочий стол\x\a.txt"));
-			Debugger.Break();
 			_alert = alert;
 			_sourceDir = getValue("source"); // ?? Directory.GetCurrentDirectory();
 			_targetDir = getValue("target"); // ?? Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), "backup");
