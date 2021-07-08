@@ -41,23 +41,23 @@ namespace AntiGit
 						var oldestFile = DateTime.MinValue;
 						var hasSynchronized = false;
 #if !DEBUG
-							try
-							{
+						try
+						{
 #endif
-						var memoryFile = new StringCollection();
-						SyncGit(ref oldestFile, ref hasSynchronized, Scan.LocalDrive, sourcePath, gitPath, ref memoryFile);
-						DeleteRemovedFiles(Scan.LocalDrive, memoryFile, sourcePath, gitPath);
-						memoryFile = new StringCollection();
-						SyncGit(ref oldestFile, ref hasSynchronized, Scan.RemoteDrive, gitPath, sourcePath, ref memoryFile);
-						DeleteRemovedFiles(Scan.RemoteDrive, memoryFile, gitPath, sourcePath);
-						FullSyncCycle++;
+							var memoryFile = new StringCollection();
+							SyncGit(ref oldestFile, ref hasSynchronized, Scan.LocalDrive, sourcePath, gitPath, ref memoryFile);
+							DeleteRemovedFiles(Scan.LocalDrive, memoryFile, sourcePath, gitPath);
+							memoryFile = new StringCollection();
+							SyncGit(ref oldestFile, ref hasSynchronized, Scan.RemoteDrive, gitPath, sourcePath, ref memoryFile);
+							DeleteRemovedFiles(Scan.RemoteDrive, memoryFile, gitPath, sourcePath);
+							FullSyncCycle++;
 #if !DEBUG
-							}
-							catch (Exception e)
-							{
-								// If the sync process fails, there will be an attempt in the next round
-								Debug.Write(e.Message);
-								Debugger.Break();
+						}
+						catch (Exception e)
+						{
+							// If the sync process fails, there will be an attempt in the next round
+							Debug.Write(e.Message);
+							Debugger.Break();
 						}
 #endif
 						if (hasSynchronized)
@@ -188,7 +188,7 @@ namespace AntiGit
 					FileInfo from = null;
 					FileInfo to = null;
 					var copy = CopyType.None;
-					if (!target.Exists || RoundDate(file.LastWriteTimeUtc) > RoundDate(target.LastWriteTimeUtc))
+					if (!target.Exists || file.LastWriteTimeUtc.AddSeconds(-1) > target.LastWriteTimeUtc)
 					{
 
 						copy = scan == Scan.LocalDrive ? CopyType.CopyToRemote : CopyType.CopyFromRemote;
@@ -201,7 +201,7 @@ namespace AntiGit
 						from = file;
 						to = target;
 					}
-					else if (RoundDate(file.LastWriteTimeUtc) < RoundDate(target.LastWriteTimeUtc))
+					else if (file.LastWriteTimeUtc.AddSeconds(1) < target.LastWriteTimeUtc)
 					{
 						copy = scan == Scan.LocalDrive ? CopyType.CopyFromRemote : CopyType.CopyToRemote;
 						from = target;
@@ -242,7 +242,7 @@ namespace AntiGit
 #endif
 #if DEBUG
 								var verify = new FileInfo(to.FullName);
-								if (RoundDate(verify.LastWriteTimeUtc) != RoundDate(from.LastWriteTimeUtc))
+								if (Math.Abs((verify.LastWriteTimeUtc - from.LastWriteTimeUtc).TotalSeconds) > 1) // Check if date is different
 									Debugger.Break();
 								//else
 								//	Debugger.Break();
@@ -302,7 +302,18 @@ namespace AntiGit
 
 				if (FullSyncCycle > 1 && removedFromSource.Count > 1)
 				{
-					Context.Alert("More than one file has been deleted, for security reasons we will not synchronize if more than one file is deleted!");
+					var fileDeleted = "";
+					for (var index = 0; index < removedFromSource.Count; index++)
+					{
+						if (index == 4 && removedFromSource.Count > 4)
+						{
+							fileDeleted += Environment.NewLine + "...";
+							break;
+						}
+						var item = removedFromSource[index];
+						fileDeleted += Environment.NewLine + item;
+					}
+					Context.Alert(Resources.Dictionary.Warning2 + fileDeleted, true);
 				}
 				else
 				{
@@ -399,55 +410,35 @@ namespace AntiGit
 			return null;
 		}
 
-		private static int LinePosition(List<Line> listFrom, int line, List<Line> listTo)
-		{
-			var insertTo = -1;
-			var positions = new List<int>();
-			int n = 0;
-			var hash = listFrom[line].Hash;
-			for (int i = 0; i < listTo.Count; i++)
-			{
-				if (listTo[i].Hash == hash)
-				{
-					positions.Add(i);
-				}
-			}
-			while (positions.Count != 0)
-			{
-				if (positions.Count == 1)
-					insertTo = positions[0];
-				n++;
-				if (line - n < 0 || positions.Count == 1)
-					break;
-				hash = listFrom[line - n].Hash;
-				foreach (var item in positions.ToArray())
-				{
-					var pos = item - n;
-					if (pos < 0 || listTo[pos].Hash != hash)
-						positions.Remove(item);
-				}
-			}
-			return insertTo;
-		}
-
-		private static void Merge(FileInfo from, FileInfo to, FileInfo visualStudioBackupFile = null)
+		public static void Merge(FileInfo from, FileInfo to, FileInfo visualStudioBackupFile = null)
 		{
 			var local = visualStudioBackupFile ?? to;
 			var listFrom = LoadTextFiles(from);
 			var listTo = LoadTextFiles(local);
-
-			for (var index = 0; index < listFrom.Count; index++)
+			var positionTo = 0;
+			var positionFrom = 0;
+			if (listFrom.Count > 0)
 			{
-				var x = listFrom[index];
-				int lineOfX = LinePosition(listFrom, index, listTo);
-				if (lineOfX == -1)
+				var hashFirstLine = listFrom[0].Hash;
+				var align = listTo.FindIndex(x => x.Hash == hashFirstLine);
+				if (align != -1)
+					positionTo = align;
+				else if (listTo.Count > 0)
 				{
-					var insert = LinePosition(listFrom, index - 1, listTo);
-					if (insert != -1)
-					{
-						listTo.Insert(insert + 1, x);
-					}
+					hashFirstLine = listTo[0].Hash;
+					var alignFrom = listFrom.FindIndex(x => x.Hash == hashFirstLine);
+					if (alignFrom != -1)
+						positionFrom = alignFrom;
 				}
+			}
+			while (positionFrom < listFrom.Count)
+			{
+				if (positionTo >=listTo.Count || listFrom[positionFrom].Hash != listTo[positionTo].Hash)
+				{
+					listTo.Insert(positionTo, listFrom[positionFrom]);
+				}
+				positionFrom++;
+				positionTo++;
 			}
 
 			var lines = new List<string>();
@@ -538,17 +529,7 @@ namespace AntiGit
 			RemoteDrive,
 		}
 
-		private static DateTime RoundDate(DateTime dt)
-		{
-			// FAT / VFAT has a maximum resolution of 2s
-			// NTFS has a maximum resolution of 100 ns
-#if MAC
-			var add = 0;
-#else
-			var add = dt.Millisecond < 500 ? 0 : 1; // 0 - 499 round to lowers, 500 - 999 to upper
-#endif
-			return new DateTime(dt.Year, dt.Month, dt.Day, dt.Hour, dt.Minute, dt.Second + add);
-		}
+
 
 		/// <summary>
 		/// Update only files with data lower than that of the last final compilation (files not yet compiled locally will not be sent to the remote repository to avoid having versions that do not work because with compilation errors)
