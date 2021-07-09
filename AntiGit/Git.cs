@@ -269,6 +269,8 @@ namespace AntiGit
 
 		private void DeleteRemovedFiles(Scan scan, StringCollection memoryFile, string sourcePath, string targetPath)
 		{
+			if (_stopSync)
+				return;
 			// Check if any files or directories have been deleted
 			StringCollection oldMemoryFiles;
 
