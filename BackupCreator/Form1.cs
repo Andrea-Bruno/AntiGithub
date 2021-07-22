@@ -5,8 +5,6 @@ namespace BackupCreator
 {
 	public partial class Form1 : Form
 	{
-
-
 		public AntiGit.Context AntiGithub;
 
 		public Form1()
@@ -35,10 +33,9 @@ namespace BackupCreator
 			Source.Text = AntiGithub.SourceDir;
 			Target.Text = AntiGithub.TargetDir;
 			Git.Text = AntiGithub.GitDir;
-			//Minimize_Click(null, null);
 		}
 
-		static void selectPath(TextBox textBox)
+		static void SelectPath(TextBox textBox)
 		{
 			using (var fbd = new FolderBrowserDialog())
 			{
@@ -50,20 +47,19 @@ namespace BackupCreator
 			}
 		}
 
-
-		private void selectSource_Click(object sender, EventArgs e)
+		private void SelectSource_Click(object sender, EventArgs e)
 		{
-			selectPath(Source);
+			SelectPath(Source);
 		}
 
-		private void selectTarget_Click(object sender, EventArgs e)
+		private void SelectTarget_Click(object sender, EventArgs e)
 		{
-			selectPath(Target);
+			SelectPath(Target);
 		}
 
 		private void SelectGit_Click(object sender, EventArgs e)
 		{
-			selectPath(Git);
+			SelectPath(Git);
 		}
 
 		private void Source_TextChanged(object sender, EventArgs e)
@@ -83,12 +79,10 @@ namespace BackupCreator
 			Git.Text = AntiGithub.GitDir;
 		}
 
-
-		private void backup_Click(object sender, EventArgs e)
+		private void Backup_Click(object sender, EventArgs e)
 		{
 			AntiGithub.StartBackup();
 		}
-
 
 		private void Form1_FormClosed(object sender, FormClosedEventArgs e)
 		{

@@ -90,7 +90,7 @@ namespace BackupCreator
 			this.backup.TabIndex = 3;
 			this.backup.Text = "Backup";
 			this.backup.UseVisualStyleBackColor = true;
-			this.backup.Click += new System.EventHandler(this.backup_Click);
+			this.backup.Click += new System.EventHandler(this.Backup_Click);
 			// 
 			// selectSource
 			// 
@@ -100,7 +100,7 @@ namespace BackupCreator
 			this.selectSource.TabIndex = 4;
 			this.selectSource.Text = "select";
 			this.selectSource.UseVisualStyleBackColor = true;
-			this.selectSource.Click += new System.EventHandler(this.selectSource_Click);
+			this.selectSource.Click += new System.EventHandler(this.SelectSource_Click);
 			// 
 			// selectTarget
 			// 
@@ -110,7 +110,7 @@ namespace BackupCreator
 			this.selectTarget.TabIndex = 4;
 			this.selectTarget.Text = "select";
 			this.selectTarget.UseVisualStyleBackColor = true;
-			this.selectTarget.Click += new System.EventHandler(this.selectTarget_Click);
+			this.selectTarget.Click += new System.EventHandler(this.SelectTarget_Click);
 			// 
 			// label3
 			// 
