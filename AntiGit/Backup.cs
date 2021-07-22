@@ -139,9 +139,11 @@ namespace AntiGit
 					Spooler.Add(dirOperation);
 					foreach (var fileInfo in dir.GetFiles())
 					{
-						if ((fileInfo.Attributes & FileAttributes.Hidden) == 0)
+						var file = fileInfo;
+						file = Support.WaitFileUnlocked(file);
+						if ((file.Attributes & FileAttributes.Hidden) == 0)
 						{
-							var originalFile = fileInfo.FullName;
+							var originalFile = file.FullName;
 							var relativeFileName = originalFile.Substring(sourceRoot.Length);
 							var targetFile = targetPath + relativeFileName;
 							if (oldTargetPath != null)
@@ -214,16 +216,17 @@ namespace AntiGit
 					case TypeOfOperation.CreateDirectory:
 						if (!Directory.Exists(Param1))
 						{
-							//Context.WriteOutput("create directory  " + Param1);
 							Directory.CreateDirectory(Param1);
 						}
 						break;
 					case TypeOfOperation.LinkDirectory:
 						if (!Directory.Exists(Param1))
 						{
-							//Context.WriteOutput("link directory  " + Param2 + " => " + Param1);
-							CreateSymbolicLink(Param1, Param2, 1); // The parameter 1 = directory
-							if (checkedIsAdmin == false)
+							// we use the relative position otherwise it gives an error if we rename the directory
+							var targetRelativeDir = Support.GetRelativePath(Param1, Param2);
+							CreateSymbolicLink(Param1, targetRelativeDir, 1); // The parameter 1 = directory
+																																//CreateSymbolicLink(Param1, Param2, 1); // The parameter 1 = directory
+							if (checkedIsAdmin)
 							{
 								checkedIsAdmin = true;
 								var dir = new DirectoryInfo(Param1);
@@ -235,14 +238,15 @@ namespace AntiGit
 						}
 						break;
 					case TypeOfOperation.LinkFile:
-						//Context.WriteOutput("link " + Param2 + " => " + Param1);
-						// These files from cannot be copied easily, you need to use the terminal command
-						CreateHardLink(Param1, Param2, IntPtr.Zero);
-						//CreateSymbolicLink(Param1, Param2, 0);// The parameter 0 = file
+						var targetRelativeFile = Support.GetRelativePath(Param1, Param2);
+						CreateHardLink(Param1, targetRelativeFile, IntPtr.Zero); // These files from cannot be copied easily, you need to use the terminal command
+																																		 //CreateHardLink(Param1, Param2, IntPtr.Zero); // These files from cannot be copied easily, you need to use the terminal command
+																																		 //CreateSymbolicLink(Param1, Param2, 0);// The parameter 0 = file 
 						break;
 					case TypeOfOperation.CopyFile:
+						Support.WaitFileUnlocked(Param1);
+						Support.WaitFileUnlocked(Param2);
 						File.Copy(Param1, Param2, true);
-						//Context.WriteOutput("copy " + Param1 + " => " + Param2);
 						break;
 				}
 			}
@@ -261,8 +265,9 @@ namespace AntiGit
 		public static bool FilesAreEqual(string nameFile1, string nameFile2)
 		{
 			var fileInfo1 = new FileInfo(nameFile1);
+			fileInfo1 = Support.WaitFileUnlocked(fileInfo1);
 			var fileInfo2 = new FileInfo(nameFile2);
-
+			fileInfo2 = Support.WaitFileUnlocked(fileInfo2);
 			if (fileInfo1.Exists != fileInfo2.Exists)
 				return false;
 
@@ -286,7 +291,7 @@ namespace AntiGit
 
 		private static bool StreamsContentsAreEqual(Stream stream1, Stream stream2)
 		{
-			const int bufferSize = 1024 * sizeof(Int64);
+			const int bufferSize = 1024 * sizeof(long);
 			var buffer1 = new byte[bufferSize];
 			var buffer2 = new byte[bufferSize];
 

@@ -32,26 +32,27 @@ namespace AntiGit
 				{
 					if (!string.IsNullOrEmpty(sourcePath) && !string.IsNullOrEmpty(gitPath))
 					{
+
+						var oldestFile = DateTime.MinValue;
+						var hasSynchronized = false;
+//#if !DEBUG
+						try
+						{
+//#endif
+
 						if (!IsSourceAndGitCompatible(new DirectoryInfo(sourcePath), new DirectoryInfo(gitPath)))
 						{
 							Context.Alert(Resources.Dictionary.Warning1);
 							return;
 						}
-
-						var oldestFile = DateTime.MinValue;
-						var hasSynchronized = false;
-#if !DEBUG
-						try
-						{
-#endif
-							var memoryFile = new StringCollection();
-							SyncGit(ref oldestFile, ref hasSynchronized, Scan.LocalDrive, sourcePath, gitPath, ref memoryFile);
-							DeleteRemovedFiles(Scan.LocalDrive, memoryFile, sourcePath, gitPath);
-							memoryFile = new StringCollection();
-							SyncGit(ref oldestFile, ref hasSynchronized, Scan.RemoteDrive, gitPath, sourcePath, ref memoryFile);
-							DeleteRemovedFiles(Scan.RemoteDrive, memoryFile, gitPath, sourcePath);
-							FullSyncCycle++;
-#if !DEBUG
+						var memoryFile = new StringCollection();
+						SyncGit(ref oldestFile, ref hasSynchronized, Scan.LocalDrive, sourcePath, gitPath, ref memoryFile);
+						DeleteRemovedFiles(Scan.LocalDrive, memoryFile, sourcePath, gitPath);
+						memoryFile = new StringCollection();
+						SyncGit(ref oldestFile, ref hasSynchronized, Scan.RemoteDrive, gitPath, sourcePath, ref memoryFile);
+						DeleteRemovedFiles(Scan.RemoteDrive, memoryFile, gitPath, sourcePath);
+						FullSyncCycle++;
+//#if !DEBUG
 						}
 						catch (Exception e)
 						{
@@ -59,16 +60,16 @@ namespace AntiGit
 							Debug.Write(e.Message);
 							Debugger.Break();
 						}
-#endif
+//#endif
 						if (hasSynchronized)
 						{
 							Context.BackupOfTheChange();
 						}
-#if !DEBUG
+//#if !DEBUG
 						// If I don't see any recent changes, loosen the monitoring of the files so as not to stress the disk
 						if ((DateTime.UtcNow - oldestFile).TotalMinutes > 30)
 							Thread.Sleep(60000);
-#endif
+//#endif
 					}
 					else
 					{
@@ -167,9 +168,9 @@ namespace AntiGit
 					compilationTime = UpdateDateLimit(localDir);// Copy to remote only the files of the latest version working at compile time
 
 				memoryFile.Add(dir.FullName);
-				foreach (var file in dir.GetFiles())
+				foreach (var fileInfo in dir.GetFiles())
 				{
-
+					var file = fileInfo;
 					if (_stopSync) break;
 
 					if (file.Attributes.HasFlag(FileAttributes.Hidden))
@@ -179,6 +180,9 @@ namespace AntiGit
 					var targetFile = Path.Combine(targetDirName, file.Name);
 					var target = targetFiles?.ToList().Find(x => x.Name == targetFile) ?? new FileInfo(targetFile);
 					var localFile = scan == Scan.LocalDrive ? file : target;
+
+					file = Support.WaitFileUnlocked(file);
+					target = Support.WaitFileUnlocked(file);
 
 					if (file.Exists && file.LastWriteTimeUtc > returnOldestFile)
 						returnOldestFile = file.LastWriteTimeUtc;
@@ -224,28 +228,40 @@ namespace AntiGit
 							var visualStudioRecoveryFile = (copy == CopyType.CopyFromRemote && compilationTime != null) ? FindVisualStudioRecoveryFile(to) : null; //NOTE: compilationTime != null is the file is a visual studio file
 							if (copy == CopyType.CopyFromRemote && IsTextFiles(from) && (visualStudioRecoveryFile != null || MyPendingFiles.Contain(to)))
 							{
-								//Context.WriteOutput("Merge " + @from.FullName + " => " + to.FullName);
 								Merge(from, to, visualStudioRecoveryFile);
 								hasSynchronized = true;
 							}
 							else
 							{
-								//Context.WriteOutput("copy " + @from.FullName + " => " + to.FullName);
-								try
+								var attempt = 0;
+								do
 								{
-									File.Copy(from.FullName, to.FullName, true);
-								}
-								catch (Exception e) { Context.WriteOutput(e.Message); }
+									try
+									{
+										File.Copy(from.FullName, to.FullName, true);
+										attempt = 0;
+									}
+									catch (Exception e)
+									{
+										attempt++;
+										//if (e.HResult == -2147024864) // File already opened by another task
+										if (attempt == 10)
+										{
+											Context.Alert(e.Message + " " + to.FullName);
+										}
+										Thread.Sleep(1000);
+										Debugger.Break();
+									}
+								} while (attempt !=0);
 #if MAC
 								File.SetCreationTimeUtc(to.FullName, from.CreationTimeUtc); // bug: If I don't change this parameter the next command has no effect!
 								File.SetLastWriteTimeUtc(to.FullName, from.CreationTimeUtc);
 #endif
 #if DEBUG
-								var verify = new FileInfo(to.FullName);
-								if (Math.Abs((verify.LastWriteTimeUtc - from.LastWriteTimeUtc).TotalSeconds) > 1) // Check if date is different
-									Debugger.Break();
-								//else
-								//	Debugger.Break();
+								var verifyFron = new FileInfo(from.FullName);
+								var verifyTo = new FileInfo(to.FullName);
+								if (Math.Abs((verifyTo.LastWriteTime - verifyFron.LastWriteTime).TotalSeconds) > 1) // Check if date is different
+									Debugger.Break();								
 #endif
 								hasSynchronized = true;
 								if (compilationTime != null)
@@ -435,7 +451,7 @@ namespace AntiGit
 			}
 			while (positionFrom < listFrom.Count)
 			{
-				if (positionTo >=listTo.Count || listFrom[positionFrom].Hash != listTo[positionTo].Hash)
+				if (positionTo >= listTo.Count || listFrom[positionFrom].Hash != listTo[positionTo].Hash)
 				{
 					listTo.Insert(positionTo, listFrom[positionFrom]);
 				}
@@ -600,6 +616,7 @@ namespace AntiGit
 				}
 				catch (Exception e)
 				{
+					Context.WriteOutput(e.Message);
 				}
 			}
 #endif
