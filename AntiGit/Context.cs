@@ -35,7 +35,7 @@ namespace AntiGit
 			_gitDir = getValue("git");
 
 			SetCurrentDateTime();
-			backupTimer = new Timer(x =>
+			BackupTimer = new Timer(x =>
 			{
 				if (new DateTime(Backup.LastBackup.Year, Backup.LastBackup.Month, Backup.LastBackup.Day) != new DateTime(DateTime.UtcNow.Year, DateTime.UtcNow.Month, DateTime.UtcNow.Day))
 				{
@@ -85,7 +85,7 @@ namespace AntiGit
 					else
 					{
 						WriteOutput(Resources.Dictionary.PleaseAdjustClock);
-						RequestAdministrationMode();
+						RequestAdministrationMode(Resources.Dictionary.Warning4);
 					}
 				}
 			}
@@ -103,7 +103,6 @@ namespace AntiGit
 			Support.ExecuteMacCommand("date", "-u " + currentDateTime.ToString("MMddHHmmyy"));
 			return true;
 		}
-
 #else
 		private static bool SetDateTime(DateTime currentDateTime)
 		{
@@ -316,8 +315,7 @@ namespace AntiGit
 		}
 		private static Action<string> _alert;
 
-		private Timer backupTimer;
-
+		private readonly Timer BackupTimer; // It is used to keep a reference of the timer so as not to be removed from the garbage collector
 
 		internal static readonly DirectoryInfo AppDir = new DirectoryInfo(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData) + @"\Context");
 
@@ -335,20 +333,12 @@ namespace AntiGit
 			File.WriteAllText(file, value);
 		}
 
-
-
 		private static bool _requestAdmin;
-		internal static void RequestAdministrationMode()
+		internal static void RequestAdministrationMode(string descriprion)
 		{
 			if (_requestAdmin) return;
-			Alert(Resources.Dictionary.Error2);
+			Alert(Resources.Dictionary.Error2 + Environment.NewLine + descriprion);
 			_requestAdmin = true;
 		}
-
-
-
-
-
-
 	}
 }

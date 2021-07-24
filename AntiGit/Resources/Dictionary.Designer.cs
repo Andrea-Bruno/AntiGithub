@@ -203,5 +203,23 @@ namespace AntiGit.Resources {
                 return ResourceManager.GetString("Warning2", resourceCulture);
             }
         }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Unable to create symbolic links.
+        /// </summary>
+        internal static string Warning3 {
+            get {
+                return ResourceManager.GetString("Warning3", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Unable to synchronize the clock.
+        /// </summary>
+        internal static string Warning4 {
+            get {
+                return ResourceManager.GetString("Warning4", resourceCulture);
+            }
+        }
     }
 }

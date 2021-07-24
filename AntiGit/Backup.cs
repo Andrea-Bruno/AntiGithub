@@ -232,7 +232,7 @@ namespace AntiGit
 								var dir = new DirectoryInfo(Param1);
 								if (!dir.Exists)
 								{
-									Context.RequestAdministrationMode();
+									Context.RequestAdministrationMode(Resources.Dictionary.Warning3);
 								}
 							}
 						}

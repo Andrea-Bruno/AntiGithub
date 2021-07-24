@@ -35,24 +35,24 @@ namespace AntiGit
 
 						var oldestFile = DateTime.MinValue;
 						var hasSynchronized = false;
-//#if !DEBUG
+						//#if !DEBUG
 						try
 						{
-//#endif
+							//#endif
 
-						if (!IsSourceAndGitCompatible(new DirectoryInfo(sourcePath), new DirectoryInfo(gitPath)))
-						{
-							Context.Alert(Resources.Dictionary.Warning1);
-							return;
-						}
-						var memoryFile = new StringCollection();
-						SyncGit(ref oldestFile, ref hasSynchronized, Scan.LocalDrive, sourcePath, gitPath, ref memoryFile);
-						DeleteRemovedFiles(Scan.LocalDrive, memoryFile, sourcePath, gitPath);
-						memoryFile = new StringCollection();
-						SyncGit(ref oldestFile, ref hasSynchronized, Scan.RemoteDrive, gitPath, sourcePath, ref memoryFile);
-						DeleteRemovedFiles(Scan.RemoteDrive, memoryFile, gitPath, sourcePath);
-						FullSyncCycle++;
-//#if !DEBUG
+							if (!IsSourceAndGitCompatible(new DirectoryInfo(sourcePath), new DirectoryInfo(gitPath)))
+							{
+								Context.Alert(Resources.Dictionary.Warning1);
+								return;
+							}
+							var memoryFile = new StringCollection();
+							SyncGit(ref oldestFile, ref hasSynchronized, Scan.LocalDrive, sourcePath, gitPath, ref memoryFile);
+							DeleteRemovedFiles(Scan.LocalDrive, memoryFile, sourcePath, gitPath);
+							memoryFile = new StringCollection();
+							SyncGit(ref oldestFile, ref hasSynchronized, Scan.RemoteDrive, gitPath, sourcePath, ref memoryFile);
+							DeleteRemovedFiles(Scan.RemoteDrive, memoryFile, gitPath, sourcePath);
+							FullSyncCycle++;
+							//#if !DEBUG
 						}
 						catch (Exception e)
 						{
@@ -60,16 +60,16 @@ namespace AntiGit
 							Debug.Write(e.Message);
 							Debugger.Break();
 						}
-//#endif
+						//#endif
 						if (hasSynchronized)
 						{
 							Context.BackupOfTheChange();
 						}
-//#if !DEBUG
+						//#if !DEBUG
 						// If I don't see any recent changes, loosen the monitoring of the files so as not to stress the disk
 						if ((DateTime.UtcNow - oldestFile).TotalMinutes > 30)
 							Thread.Sleep(60000);
-//#endif
+						//#endif
 					}
 					else
 					{
@@ -170,7 +170,7 @@ namespace AntiGit
 				memoryFile.Add(dir.FullName);
 				foreach (var fileInfo in dir.GetFiles())
 				{
-					var file = fileInfo;
+					var file = fileInfo;								
 					if (_stopSync) break;
 
 					if (file.Attributes.HasFlag(FileAttributes.Hidden))
@@ -182,7 +182,7 @@ namespace AntiGit
 					var localFile = scan == Scan.LocalDrive ? file : target;
 
 					file = Support.WaitFileUnlocked(file);
-					target = Support.WaitFileUnlocked(file);
+					target = Support.WaitFileUnlocked(target);
 
 					if (file.Exists && file.LastWriteTimeUtc > returnOldestFile)
 						returnOldestFile = file.LastWriteTimeUtc;
@@ -252,7 +252,7 @@ namespace AntiGit
 										Thread.Sleep(1000);
 										Debugger.Break();
 									}
-								} while (attempt !=0);
+								} while (attempt != 0);
 #if MAC
 								File.SetCreationTimeUtc(to.FullName, from.CreationTimeUtc); // bug: If I don't change this parameter the next command has no effect!
 								File.SetLastWriteTimeUtc(to.FullName, from.CreationTimeUtc);
@@ -490,6 +490,8 @@ namespace AntiGit
 		public static ulong GetHashCode(string input)
 		{
 			input = input.Replace("\t", "");
+			input = input.Replace("\r", "");
+			input = input.Replace("\n", "");
 			input = input.Replace(" ", "");
 			const ulong value = 3074457345618258791ul;
 			var hashedValue = value;

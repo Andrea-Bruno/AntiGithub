@@ -91,7 +91,7 @@ namespace AntiGit
 				if (isLocked)
 				{
 					attempt++;
-					if (attempt == 10)
+					if (attempt == 320) // 5 min - Note: It may be that a copy is in progress, or other normal operations use the file, before giving a warning we wait for the normal operations to be finished
 					{
 						Context.Alert(Resources.Dictionary.FileLocked + " " + file.FullName);
 					}
