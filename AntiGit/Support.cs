@@ -1,10 +1,11 @@
 ﻿using System;
 using System.Diagnostics;
 using System.IO;
+using static System.Net.WebRequestMethods;
 
 namespace AntiGit
 {
-	static class Support
+	internal static class Support
 	{
 #if MAC
 		public static void ExecuteMacCommand(string command, string arguments)
@@ -105,5 +106,19 @@ namespace AntiGit
 		{
 			_ = WaitFileUnlocked(new FileInfo(fileName));
 		}
+
+		public static bool IsLocalPath(DirectoryInfo path)
+		{
+			DriveInfo drive = new DriveInfo(path.Root.FullName);
+			return drive.DriveType != DriveType.Network;
+		}
+
+		public static bool IsLocalPath(string pathName)
+		{
+			var path = new DirectoryInfo(pathName);
+			return IsLocalPath(path);
+		}
+
+
 	}
 }

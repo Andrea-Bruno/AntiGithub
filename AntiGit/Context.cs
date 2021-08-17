@@ -55,7 +55,7 @@ namespace AntiGit
 		public void StopSyncGit() => Git.StopSyncGit();
 		public bool SyncGitRunning => Git.SyncGitRunning;
 		public void StartBackup() => Backup.Start(SourceDir, TargetDir);
-		public bool BackupRunning => Backup.BackupRunning;
+		public bool BackupRunning => Backup.BackupRunning !=0;
 		public static readonly string[] ExcludeDir = { "bin", "obj", ".vs", "packages" };
 
 
@@ -185,9 +185,11 @@ namespace AntiGit
 			if (!string.IsNullOrEmpty(_gitDir))
 			{
 				if (!Directory.Exists(_gitDir))
-					WriteOutput("Git " + Resources.Dictionary.DirectoryNotFound);
+					Alert("Git " + Resources.Dictionary.DirectoryNotFound);
 				else if (!Directory.Exists(_sourceDir))
-					WriteOutput("Source " + Resources.Dictionary.DirectoryNotFound);
+					Alert("Source " + Resources.Dictionary.DirectoryNotFound);
+				else if (!Support.IsLocalPath(_sourceDir))
+					Alert(Resources.Dictionary.Error3);
 				else
 					Git.FullSyncGit(_sourceDir, _gitDir);
 			}
@@ -224,7 +226,7 @@ namespace AntiGit
 				if (_sourceDir != value)
 				{
 					_sourceDir = value;
-					setValue("source", value);
+					SetValue("source", value);
 					if (CheckSourceAndGit())
 					{
 						SyncGit();
@@ -247,7 +249,7 @@ namespace AntiGit
 				if (_targetDir != value)
 				{
 					_targetDir = value;
-					setValue("target", value);
+					SetValue("target", value);
 					if (!string.IsNullOrEmpty(_targetDir) && !Directory.Exists(_targetDir))
 						WriteOutput("Target " + Resources.Dictionary.DirectoryNotFound);
 				}
@@ -264,7 +266,7 @@ namespace AntiGit
 				if (_gitDir != value)
 				{
 					_gitDir = value;
-					setValue("git", value);
+					SetValue("git", value);
 					if (CheckSourceAndGit())
 					{
 						SyncGit();
@@ -284,6 +286,11 @@ namespace AntiGit
 				try
 				{
 					var source = new DirectoryInfo(_sourceDir);
+					if (!Support.IsLocalPath(source))
+					{
+						Alert(Resources.Dictionary.Error3);
+						return false;
+					}
 					var git = new DirectoryInfo(_gitDir);
 					var sourceCount = source.GetFileSystemInfos().Length;
 					var gitCount = git.GetFileSystemInfos().Length;
@@ -325,7 +332,7 @@ namespace AntiGit
 			return File.Exists(file) ? File.ReadAllText(file) : null;
 		}
 
-		private void setValue(string name, string value)
+		private void SetValue(string name, string value)
 		{
 			if (!AppDir.Exists)
 				AppDir.Create();

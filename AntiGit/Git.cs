@@ -18,8 +18,11 @@ namespace AntiGit
 		private readonly Context Context;
 		private Thread gitTask;
 		private int FullSyncCycle;
-
-
+#if DEBUG
+		const int SleepMs = 5000;
+#else
+		const int SleepMs = 60000;
+#endif
 		internal void FullSyncGit(string sourcePath, string gitPath)
 		{
 			LocalFiles = LoadMemoryFile(sourcePath);
@@ -45,12 +48,12 @@ namespace AntiGit
 								Context.Alert(Resources.Dictionary.Warning1);
 								return;
 							}
-							var memoryFile = new StringCollection();
-							SyncGit(ref oldestFile, ref hasSynchronized, Scan.LocalDrive, sourcePath, gitPath, ref memoryFile);
-							DeleteRemovedFiles(Scan.LocalDrive, memoryFile, sourcePath, gitPath);
-							memoryFile = new StringCollection();
-							SyncGit(ref oldestFile, ref hasSynchronized, Scan.RemoteDrive, gitPath, sourcePath, ref memoryFile);
-							DeleteRemovedFiles(Scan.RemoteDrive, memoryFile, gitPath, sourcePath);
+							var newMemoryFile = new StringCollection();
+							SyncGit(ref oldestFile, ref hasSynchronized, Scan.LocalDrive, sourcePath, gitPath, ref newMemoryFile);
+							DeleteRemovedFiles(Scan.LocalDrive, newMemoryFile, sourcePath, gitPath);
+							newMemoryFile = new StringCollection();
+							SyncGit(ref oldestFile, ref hasSynchronized, Scan.RemoteDrive, gitPath, sourcePath, ref newMemoryFile);
+							DeleteRemovedFiles(Scan.RemoteDrive, newMemoryFile, gitPath, sourcePath);
 							FullSyncCycle++;
 							//#if !DEBUG
 						}
@@ -68,12 +71,12 @@ namespace AntiGit
 						//#if !DEBUG
 						// If I don't see any recent changes, loosen the monitoring of the files so as not to stress the disk
 						if ((DateTime.UtcNow - oldestFile).TotalMinutes > 30)
-							Thread.Sleep(60000);
+							Thread.Sleep(SleepMs);
 						//#endif
 					}
 					else
 					{
-						Thread.Sleep(60000);
+						Thread.Sleep(SleepMs);
 					}
 				}
 				_stopSync = true;
@@ -130,7 +133,7 @@ namespace AntiGit
 
 		private StringCollection LocalFiles;
 		private StringCollection RemoteFiles;
-		void SyncGit(ref DateTime returnOldestFile, ref bool hasSynchronized, Scan scan, string sourcePath, string targetPath, ref StringCollection memoryFile, string sourceRoot = null, DateTime? compilationTime = null)
+		void SyncGit(ref DateTime returnOldestFile, ref bool hasSynchronized, Scan scan, string sourcePath, string targetPath, ref StringCollection returnNewMemoryFile, string sourceRoot = null, DateTime? compilationTime = null)
 		{
 			if (_stopSync)
 				return;
@@ -140,16 +143,24 @@ namespace AntiGit
 			}
 			var relativeDirName = sourcePath.Substring(sourceRoot.Length);
 			var targetDirName = targetPath + relativeDirName;
-
 			var dir = new DirectoryInfo(sourcePath);
+#if DEBUG
+			// code for testing
+			//if (dir.FullName.EndsWith(@"BitBoxLab\Localization\Resources", StringComparison.InvariantCultureIgnoreCase))
+			//	Debugger.Break();
+#endif
+
 			var nameDir = dir.Name.ToLower();
 			if (!Context.ExcludeDir.Contains(nameDir) && (dir.Attributes & FileAttributes.Hidden) == 0)
 			{
 				var dirTarget = new DirectoryInfo(targetDirName);
 				FileInfo[] targetFiles = null;
+				var oldSourceMemoryFile = scan == Scan.LocalDrive ? LocalFiles : RemoteFiles;
+				var oldTargetMemoryFile = scan == Scan.LocalDrive ? RemoteFiles : LocalFiles;
 				if (!dirTarget.Exists)
 				{
-					//Context.WriteOutput("create directory  " + targetDirName);
+					if (oldSourceMemoryFile != null && oldSourceMemoryFile.Contains(dir.FullName) && (oldTargetMemoryFile != null && oldTargetMemoryFile.Contains(dirTarget.FullName)))
+						return; //The directory has been deleted: So we don't create a removed directory again
 					try
 					{
 						Directory.CreateDirectory(targetDirName);
@@ -167,15 +178,20 @@ namespace AntiGit
 				if (compilationTime == null)
 					compilationTime = UpdateDateLimit(localDir);// Copy to remote only the files of the latest version working at compile time
 
-				memoryFile.Add(dir.FullName);
+				returnNewMemoryFile.Add(dir.FullName);
 				foreach (var fileInfo in dir.GetFiles())
 				{
-					var file = fileInfo;								
+					var file = fileInfo;
+#if DEBUG
+					// code for testing
+					//if (file.FullName.EndsWith(@"\ResxGenerator\Form1.cs", StringComparison.InvariantCultureIgnoreCase))
+					//	Debugger.Break();
+#endif
 					if (_stopSync) break;
 
 					if (file.Attributes.HasFlag(FileAttributes.Hidden))
 						continue;
-					memoryFile.Add(file.FullName);
+					returnNewMemoryFile.Add(file.FullName);
 
 					var targetFile = Path.Combine(targetDirName, file.Name);
 					var target = targetFiles?.ToList().Find(x => x.Name == targetFile) ?? new FileInfo(targetFile);
@@ -192,20 +208,17 @@ namespace AntiGit
 					FileInfo from = null;
 					FileInfo to = null;
 					var copy = CopyType.None;
-					if (!target.Exists || file.LastWriteTimeUtc.AddSeconds(-1) > target.LastWriteTimeUtc)
-					{
 
+					var isDeletedFromUser = !target.Exists && oldSourceMemoryFile != null && oldSourceMemoryFile.Contains(file.FullName) && oldTargetMemoryFile != null && oldTargetMemoryFile.Contains(target.FullName);
+					if (isDeletedFromUser) continue;
+
+					if (!target.Exists || file.LastWriteTimeUtc.AddSeconds(-2) > target.LastWriteTimeUtc)
+					{
 						copy = scan == Scan.LocalDrive ? CopyType.CopyToRemote : CopyType.CopyFromRemote;
-						if (!target.Exists)
-						{
-							var memoryOfTarget = scan == Scan.LocalDrive ? RemoteFiles : LocalFiles;
-							if (memoryOfTarget?.Contains(target.FullName) == true)
-								continue; // It is not a new file but it is a deleted file!
-						}
 						from = file;
 						to = target;
 					}
-					else if (file.LastWriteTimeUtc.AddSeconds(1) < target.LastWriteTimeUtc)
+					else if (file.LastWriteTimeUtc.AddSeconds(2) < target.LastWriteTimeUtc)
 					{
 						copy = scan == Scan.LocalDrive ? CopyType.CopyFromRemote : CopyType.CopyToRemote;
 						from = target;
@@ -213,6 +226,9 @@ namespace AntiGit
 					}
 
 					if (copy == CopyType.None) continue;
+
+					//var oldSourceFileExists = oldMemoryFile.Contains(dir.FullName);
+
 
 
 					if (copy == CopyType.CopyToRemote && compilationTime != null && compilationTime != DateTime.MinValue && from.LastWriteTimeUtc > compilationTime) // Copy to remote only the files of the latest version working at compile time
@@ -261,7 +277,7 @@ namespace AntiGit
 								var verifyFron = new FileInfo(from.FullName);
 								var verifyTo = new FileInfo(to.FullName);
 								if (Math.Abs((verifyTo.LastWriteTime - verifyFron.LastWriteTime).TotalSeconds) > 1) // Check if date is different
-									Debugger.Break();								
+									Debugger.Break();
 #endif
 								hasSynchronized = true;
 								if (compilationTime != null)
@@ -276,13 +292,14 @@ namespace AntiGit
 						}
 					}
 				}
-				foreach (var sourceDir in Directory.GetDirectories(sourcePath))
+				var subDirectories = Directory.GetDirectories(sourcePath);
+				foreach (var sourceDir in subDirectories)
 				{
-					SyncGit(ref returnOldestFile, ref hasSynchronized, scan, sourceDir, targetPath, ref memoryFile, sourceRoot, compilationTime);
+					SyncGit(ref returnOldestFile, ref hasSynchronized, scan, sourceDir, targetPath, ref returnNewMemoryFile, sourceRoot, compilationTime);
 				}
 			}
 		}
-
+		private const int maxFileAllowToDeleteInOneTime = 3;
 		private void DeleteRemovedFiles(Scan scan, StringCollection memoryFile, string sourcePath, string targetPath)
 		{
 			if (_stopSync)
@@ -318,7 +335,7 @@ namespace AntiGit
 						removedFromSource.Add(oldMemoryFile);
 				}
 
-				if (FullSyncCycle > 1 && removedFromSource.Count > 1)
+				if (FullSyncCycle > 1 && removedFromSource.Count > maxFileAllowToDeleteInOneTime)
 				{
 					var fileDeleted = "";
 					for (var index = 0; index < removedFromSource.Count; index++)
@@ -335,6 +352,7 @@ namespace AntiGit
 				}
 				else
 				{
+					bool isShow = false;
 					foreach (var item in removedFromSource)
 					{
 						var target = targetPath + item.Substring(sourcePath.Length);
@@ -349,16 +367,26 @@ namespace AntiGit
 							{
 								Context.WriteOutput(e.Message);
 							}
-
 						}
 						else
 						{
-							var dirInfo = new FileInfo(target);
+							var dirInfo = new DirectoryInfo(target);
 							if (dirInfo.Exists)
 							{
 								try
 								{
-									dirInfo.Delete();
+									if (dirInfo.GetFiles().Count() + dirInfo.GetDirectories().Count() == 0)
+									{
+										dirInfo.Delete();
+									}
+									else
+									{
+										if (!isShow)
+										{
+											isShow = true;
+											Context.Alert(Resources.Dictionary.Warning5 + Environment.NewLine + target, true);
+										}
+									}
 								}
 								catch (Exception e)
 								{
@@ -548,8 +576,6 @@ namespace AntiGit
 			LocalDrive,
 			RemoteDrive,
 		}
-
-
 
 		/// <summary>
 		/// Update only files with data lower than that of the last final compilation (files not yet compiled locally will not be sent to the remote repository to avoid having versions that do not work because with compilation errors)

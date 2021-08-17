@@ -132,6 +132,9 @@
   <data name="Error2" xml:space="preserve">
     <value>Error: The application must be run in administrator mode</value>
   </data>
+  <data name="Error3" xml:space="preserve">
+    <value>The source directory cannot be remote</value>
+  </data>
   <data name="FileLocked" xml:space="preserve">
     <value>File permanently locked by a process</value>
   </data>
@@ -170,5 +173,8 @@
   </data>
   <data name="Warning4" xml:space="preserve">
     <value>Unable to synchronize the clock</value>
+  </data>
+  <data name="Warning5" xml:space="preserve">
+    <value>Only empty directories can be deleted</value>
   </data>
 </root>

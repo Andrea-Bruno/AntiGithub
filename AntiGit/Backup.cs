@@ -38,7 +38,8 @@ namespace AntiGit
 		private readonly Context Context;
 		internal DateTime LastBackup;
 		private Thread backupThread;
-		internal bool BackupRunning;
+		internal bool StopBackup;
+		internal int BackupRunning;
 
 		public void Start(string SourceDir, string TargetDir, bool daily = true)
 		{
@@ -62,9 +63,9 @@ namespace AntiGit
 					backupThread = new Thread(() =>
 					{
 						LastBackup = DateTime.UtcNow;
-						BackupRunning = true;
+						BackupRunning++;
 						var today = DateTime.Now;
-						var targetPath = daily ? Path.Combine(TargetDir, today.ToString("dd MM yyyy", CultureInfo.InvariantCulture)) : Path.Combine(TargetDir, "today", today.ToString("HH mm", CultureInfo.InvariantCulture));
+						var targetPath = daily ? Path.Combine(TargetDir, today.ToString("yyyy MM dd", CultureInfo.InvariantCulture)) : Path.Combine(TargetDir, "today", today.ToString("HH mm", CultureInfo.InvariantCulture));
 						DirectoryInfo target;
 						if (daily)
 						{
@@ -106,8 +107,8 @@ namespace AntiGit
 
 						var oldTargetPath = oltDir?.FullName;
 
-						ExecuteBackup(!daily, SourceDir, targetPath, oldTargetPath);
-						BackupRunning = false;
+						ExecuteBackup(SourceDir, targetPath, oldTargetPath, new List<FileOperation>());
+						BackupRunning--;
 					})
 					{ Priority = ThreadPriority.Lowest };
 					backupThread.Start();
@@ -115,9 +116,9 @@ namespace AntiGit
 			}
 		}
 
-		private bool ExecuteBackup(bool skipIfThereAreNoChanges, string sourcePath, string targetPath, string oldTargetPath, string sourceRoot = null)
+		private bool ExecuteBackup(string sourcePath, string targetPath, string oldTargetPath, List<FileOperation> spooler, string sourceRoot = null)
 		{
-			if (!BackupRunning)
+			if (StopBackup)
 				return false;
 			var rootRecursive = false;
 			if (sourceRoot == null)
@@ -136,7 +137,8 @@ namespace AntiGit
 				{
 					var relativeDirName = sourcePath.Substring(sourceRoot.Length);
 					var targetDirName = targetPath + relativeDirName;
-					Spooler.Add(dirOperation);
+					spooler.Add(dirOperation);
+					var addToSpooler = new List<FileOperation>();
 					foreach (var fileInfo in dir.GetFiles())
 					{
 						var file = fileInfo;
@@ -151,20 +153,21 @@ namespace AntiGit
 								var oldFile = oldTargetPath + relativeFileName;
 								if (FilesAreEqual(originalFile, oldFile))
 								{
-									Spooler.Add(new FileOperation(TypeOfOperation.LinkFile, targetFile, oldFile));
+									addToSpooler.Add(new FileOperation(TypeOfOperation.LinkFile, targetFile, oldFile));
 									continue;
 								}
 							}
-							Spooler.Add(new FileOperation(TypeOfOperation.CopyFile, originalFile, targetFile));
+							addToSpooler.Add(new FileOperation(TypeOfOperation.CopyFile, originalFile, targetFile));
 							fileAreChanged = true;
 						}
 					}
 					foreach (var sourceDir in Directory.GetDirectories(sourcePath))
 					{
-						fileAreChanged |= ExecuteBackup(skipIfThereAreNoChanges, sourceDir, targetPath, oldTargetPath, sourceRoot);
+						fileAreChanged |= ExecuteBackup(sourceDir, targetPath, oldTargetPath, spooler, sourceRoot);
 					}
 					if (fileAreChanged || oldTargetPath == null)
 					{
+						spooler.AddRange(addToSpooler);
 						dirOperation.Operation = TypeOfOperation.CreateDirectory;
 						dirOperation.Param1 = targetDirName;
 					}
@@ -177,9 +180,9 @@ namespace AntiGit
 					}
 					if (rootRecursive)
 					{
-						if (!skipIfThereAreNoChanges || fileAreChanged)
+						if (fileAreChanged)
 						{
-							Spooler.ForEach(operation => operation.Execute());
+							spooler.ForEach(operation => operation.Execute());
 						}
 					}
 				}
@@ -194,7 +197,6 @@ namespace AntiGit
 			return fileAreChanged;
 		}
 
-		private readonly List<FileOperation> Spooler = new List<FileOperation>();
 		class FileOperation
 		{
 			public FileOperation()

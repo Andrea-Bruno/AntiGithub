@@ -89,7 +89,7 @@ namespace BackupCreator
 			AntiGithub.StopSyncGit();
 		}
 
-		private void notifyIcon1_DoubleClick(object sender, EventArgs e)
+		private void NotifyIcon1_DoubleClick(object sender, EventArgs e)
 		{
 			WindowState = FormWindowState.Normal;
 			ShowInTaskbar = true;
@@ -105,11 +105,6 @@ namespace BackupCreator
 			notifyIcon1.Visible = true;
 		}
 	}
-
-
-
-
-
 }
 
 

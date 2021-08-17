@@ -106,6 +106,15 @@ namespace AntiGit.Resources {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to The source directory cannot be remote.
+        /// </summary>
+        internal static string Error3 {
+            get {
+                return ResourceManager.GetString("Error3", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to File permanently locked by a process.
         /// </summary>
         internal static string FileLocked {
@@ -219,6 +228,15 @@ namespace AntiGit.Resources {
         internal static string Warning4 {
             get {
                 return ResourceManager.GetString("Warning4", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Only empty directories can be deleted.
+        /// </summary>
+        internal static string Warning5 {
+            get {
+                return ResourceManager.GetString("Warning5", resourceCulture);
             }
         }
     }
