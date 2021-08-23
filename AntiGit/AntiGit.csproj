@@ -30,12 +30,21 @@
       <AutoGen>True</AutoGen>
       <DependentUpon>Dictionary.resx</DependentUpon>
     </Compile>
+    <Compile Update="Resources\Dictionary_it.Designer.cs">
+      <DesignTime>True</DesignTime>
+      <AutoGen>True</AutoGen>
+      <DependentUpon>Dictionary_it.resx</DependentUpon>
+    </Compile>
   </ItemGroup>
 
   <ItemGroup>
     <EmbeddedResource Update="Resources\Dictionary.resx">
       <Generator>ResXFileCodeGenerator</Generator>
       <LastGenOutput>Dictionary.Designer.cs</LastGenOutput>
+    </EmbeddedResource>
+    <EmbeddedResource Update="Resources\Dictionary_it.resx">
+      <Generator>PublicResXFileCodeGenerator</Generator>
+      <LastGenOutput>Dictionary_it.Designer.cs</LastGenOutput>
     </EmbeddedResource>
   </ItemGroup>
 

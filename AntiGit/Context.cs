@@ -22,7 +22,7 @@ namespace AntiGit
 		private readonly Git Git;
 
 		public Context(Action<string> alert = null)
-		{
+		{	
 			WriteOutput(Info);
 			Backup = new Backup(this);
 			Git = new Git(this);

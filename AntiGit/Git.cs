@@ -13,6 +13,12 @@ namespace AntiGit
 		public Git(Context context)
 		{
 			Context = context;
+#if DEBUG
+			//var x1 = Merge.LoadTextFiles(new FileInfo(@"C:\test\text1.txt"));
+			//Merge.ExecuteMerge(new FileInfo(@"C:\test\t1.txt"), new FileInfo(@"C:\test\t2.txt"), null, new FileInfo(@"C:\test\Result.txt"));
+			//var x2 = Merge.LoadTextFiles(new FileInfo(@"C:\test\result.txt"));
+			//Debugger.Break();
+#endif
 		}
 
 		private readonly Context Context;
@@ -25,10 +31,12 @@ namespace AntiGit
 #endif
 		internal void FullSyncGit(string sourcePath, string gitPath)
 		{
-			LocalFiles = LoadMemoryFile(sourcePath);
-			RemoteFiles = LoadMemoryFile(gitPath);
 			gitTask = new Thread(() =>
 			{
+				if (LocalFiles == null)
+					LocalFiles = LoadMemoryFile(sourcePath);
+				if (RemoteFiles == null)
+					RemoteFiles = LoadMemoryFile(gitPath);
 				FullSyncCycle = 0;
 				_stopSync = false;
 				while (!_stopSync)
@@ -60,8 +68,16 @@ namespace AntiGit
 						catch (Exception e)
 						{
 							// If the sync process fails, there will be an attempt in the next round
+							if ((DateTime.UtcNow - LastErrorTime).TotalMinutes > 10)
+							{
+								if (e.HResult == -2147024832) // Network no longer available
+								{
+									Context.Alert(e.Message);
+								}
+							}
 							Debug.Write(e.Message);
 							Debugger.Break();
+							LastErrorTime = DateTime.UtcNow;
 						}
 						//#endif
 						if (hasSynchronized)
@@ -85,7 +101,7 @@ namespace AntiGit
 			gitTask.Start();
 		}
 		private bool _stopSync = true;
-
+		private DateTime LastErrorTime = default;
 		private static bool IsSourceAndGitCompatible(DirectoryInfo source, DirectoryInfo git)
 		{
 
@@ -244,7 +260,7 @@ namespace AntiGit
 							var visualStudioRecoveryFile = (copy == CopyType.CopyFromRemote && compilationTime != null) ? FindVisualStudioRecoveryFile(to) : null; //NOTE: compilationTime != null is the file is a visual studio file
 							if (copy == CopyType.CopyFromRemote && IsTextFiles(from) && (visualStudioRecoveryFile != null || MyPendingFiles.Contain(to)))
 							{
-								Merge(from, to, visualStudioRecoveryFile);
+								Merge.ExecuteMerge(from, to, visualStudioRecoveryFile);
 								hasSynchronized = true;
 							}
 							else
@@ -422,7 +438,7 @@ namespace AntiGit
 		{
 			if (memory != null && !string.IsNullOrEmpty(path))
 			{
-				var file = Path.Combine(Context.AppDir.FullName, GetHashCode(path) + ".txt");
+				var file = Path.Combine(Context.AppDir.FullName, Merge.GetHashCode(path) + ".txt");
 				File.WriteAllLines(file, memory.Cast<string>().ToArray());
 			}
 		}
@@ -431,7 +447,7 @@ namespace AntiGit
 		{
 			if (!string.IsNullOrEmpty(path))
 			{
-				var file = Path.Combine(Context.AppDir.FullName, GetHashCode(path) + ".txt");
+				var file = Path.Combine(Context.AppDir.FullName, Merge.GetHashCode(path) + ".txt");
 				var fileInfo = new FileInfo(file);
 				if (fileInfo.Exists)
 				{
@@ -444,7 +460,7 @@ namespace AntiGit
 		{
 			if (!string.IsNullOrEmpty(path))
 			{
-				var file = Path.Combine(Context.AppDir.FullName, GetHashCode(path) + ".txt");
+				var file = Path.Combine(Context.AppDir.FullName, Merge.GetHashCode(path) + ".txt");
 				if (new FileInfo(file).Exists)
 				{
 					var list = File.ReadAllLines(file);
@@ -456,80 +472,9 @@ namespace AntiGit
 			return null;
 		}
 
-		public static void Merge(FileInfo from, FileInfo to, FileInfo visualStudioBackupFile = null)
-		{
-			var local = visualStudioBackupFile ?? to;
-			var listFrom = LoadTextFiles(from);
-			var listTo = LoadTextFiles(local);
-			var positionTo = 0;
-			var positionFrom = 0;
-			if (listFrom.Count > 0)
-			{
-				var hashFirstLine = listFrom[0].Hash;
-				var align = listTo.FindIndex(x => x.Hash == hashFirstLine);
-				if (align != -1)
-					positionTo = align;
-				else if (listTo.Count > 0)
-				{
-					hashFirstLine = listTo[0].Hash;
-					var alignFrom = listFrom.FindIndex(x => x.Hash == hashFirstLine);
-					if (alignFrom != -1)
-						positionFrom = alignFrom;
-				}
-			}
-			while (positionFrom < listFrom.Count)
-			{
-				if (positionTo >= listTo.Count || listFrom[positionFrom].Hash != listTo[positionTo].Hash)
-				{
-					listTo.Insert(positionTo, listFrom[positionFrom]);
-				}
-				positionFrom++;
-				positionTo++;
-			}
+	
 
-			var lines = new List<string>();
-			listTo.ForEach(x => lines.Add(x.Text));
-			try
-			{
-				File.WriteAllLines(to.FullName, lines);
-			}
-			catch (Exception e)
-			{
-				// If the attempt fails it will be updated to the next round!
-				if (Support.IsDiskFull(e))
-					Context.Alert(e.Message, true);
-			}
-		}
 
-		private static List<Line> LoadTextFiles(FileInfo file)
-		{
-			var fileLines = File.ReadAllLines(file.FullName);
-			var listFile = new List<Line>();
-			fileLines.ToList().ForEach(x => listFile.Add(new Line { Text = x, Hash = GetHashCode(x) }));
-			return listFile;
-		}
-
-		private class Line
-		{
-			public string Text;
-			public ulong Hash;
-		}
-
-		public static ulong GetHashCode(string input)
-		{
-			input = input.Replace("\t", "");
-			input = input.Replace("\r", "");
-			input = input.Replace("\n", "");
-			input = input.Replace(" ", "");
-			const ulong value = 3074457345618258791ul;
-			var hashedValue = value;
-			foreach (var t in input)
-			{
-				hashedValue += t;
-				hashedValue *= value;
-			}
-			return hashedValue;
-		}
 
 
 		private static bool IsTextFiles(FileInfo file)
@@ -629,12 +574,12 @@ namespace AntiGit
 
 					//var candidates = vsDir.GetFiles("~AutoRecover." + original.Name + "*", SearchOption.AllDirectories);
 					var candidates = VisualStudioBackupFile.FindAll(x => x.Name.StartsWith(@"~AutoRecover." + original.Name));
-					var listOriginal = LoadTextFiles(original);
+					var listOriginal = Merge.LoadTextFiles(original);
 					foreach (var candidate in candidates)
 					{
 						if (candidate.LastWriteTimeUtc > original.LastWriteTimeUtc)
 						{
-							var listCandidate = LoadTextFiles(candidate);
+							var listCandidate = Merge.LoadTextFiles(candidate);
 							if (FilesAreSimilar(listOriginal, listCandidate))
 							{
 								return candidate;
@@ -651,7 +596,7 @@ namespace AntiGit
 			return null;
 		}
 
-		private static bool FilesAreSimilar(List<Line> list1, List<Line> list2, double limit = 0.6)
+		private static bool FilesAreSimilar(List<Merge.Line> list1, List<Merge.Line> list2, double limit = 0.6)
 		{
 
 			var find = 0;

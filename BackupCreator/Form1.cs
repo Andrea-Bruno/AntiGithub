@@ -8,7 +8,7 @@ namespace BackupCreator
 		public AntiGit.Context AntiGithub;
 
 		public Form1()
-		{
+		{			
 			InitializeComponent();
 		}
 
