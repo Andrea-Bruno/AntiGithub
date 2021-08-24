@@ -3,7 +3,7 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.0.31521.260
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AntiGitUI", "BackupCreator\AntiGitUI.csproj", "{6669F4B4-8B78-4990-B898-CFA158518DA9}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AntiGitUI", "AntiGitWin\AntiGitUI.csproj", "{6669F4B4-8B78-4990-B898-CFA158518DA9}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "AntiGitLibrary", "AntiGit\AntiGitLibrary.csproj", "{FCB5BD6A-7172-4728-ADE2-81AF7CEA0C21}"
 EndProject
