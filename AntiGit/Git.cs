@@ -43,9 +43,8 @@ namespace AntiGitLibrary
 				{
 					if (!string.IsNullOrEmpty(sourcePath) && !string.IsNullOrEmpty(gitPath))
 					{
-
 						var oldestFile = DateTime.MinValue;
-						var hasSynchronized = false;
+						var someFilesHaveChanged = false;
 						//#if !DEBUG
 						try
 						{
@@ -57,10 +56,10 @@ namespace AntiGitLibrary
 								return;
 							}
 							var newMemoryFile = new StringCollection();
-							SyncGit(ref oldestFile, ref hasSynchronized, Scan.LocalDrive, sourcePath, gitPath, ref newMemoryFile);
+							SyncGit(ref oldestFile, ref someFilesHaveChanged, Scan.LocalDrive, sourcePath, gitPath, ref newMemoryFile);
 							DeleteRemovedFiles(Scan.LocalDrive, newMemoryFile, sourcePath, gitPath);
 							newMemoryFile = new StringCollection();
-							SyncGit(ref oldestFile, ref hasSynchronized, Scan.RemoteDrive, gitPath, sourcePath, ref newMemoryFile);
+							SyncGit(ref oldestFile, ref someFilesHaveChanged, Scan.RemoteDrive, gitPath, sourcePath, ref newMemoryFile);
 							DeleteRemovedFiles(Scan.RemoteDrive, newMemoryFile, gitPath, sourcePath);
 							FullSyncCycle++;
 							//#if !DEBUG
@@ -80,7 +79,7 @@ namespace AntiGitLibrary
 							LastErrorTime = DateTime.UtcNow;
 						}
 						//#endif
-						if (hasSynchronized)
+						if (someFilesHaveChanged)
 						{
 							Context.BackupOfTheChange();
 						}
@@ -149,7 +148,7 @@ namespace AntiGitLibrary
 
 		private StringCollection LocalFiles;
 		private StringCollection RemoteFiles;
-		void SyncGit(ref DateTime returnOldestFile, ref bool hasSynchronized, Scan scan, string sourcePath, string targetPath, ref StringCollection returnNewMemoryFile, string sourceRoot = null, DateTime? compilationTime = null)
+		void SyncGit(ref DateTime returnOldestFile, ref bool someFilesHaveChanged, Scan scan, string sourcePath, string targetPath, ref StringCollection returnNewMemoryFile, string sourceRoot = null, DateTime? compilationTime = null)
 		{
 			if (_stopSync)
 				return;
@@ -243,25 +242,22 @@ namespace AntiGitLibrary
 
 					if (copy == CopyType.None) continue;
 
-					//var oldSourceFileExists = oldMemoryFile.Contains(dir.FullName);
-
-
-
 					if (copy == CopyType.CopyToRemote && compilationTime != null && compilationTime != DateTime.MinValue && from.LastWriteTimeUtc > compilationTime) // Copy to remote only the files of the latest version working at compile time
 					{
 						if (IsTextFiles(from))
-							MyPendingFiles.Add(from);
+							if (MyPendingFiles.Add(from))
+								someFilesHaveChanged = true;
 					}
 					else
 					{
 						try
 						{
+							someFilesHaveChanged = true;
 							// Check if this file exists in the visual studio backup, If yes, then a change is in progress on the local computer!
 							var visualStudioRecoveryFile = (copy == CopyType.CopyFromRemote && compilationTime != null) ? FindVisualStudioRecoveryFile(to) : null; //NOTE: compilationTime != null is the file is a visual studio file
 							if (copy == CopyType.CopyFromRemote && IsTextFiles(from) && (visualStudioRecoveryFile != null || MyPendingFiles.Contain(to)))
 							{
 								Merge.ExecuteMerge(from, to, visualStudioRecoveryFile);
-								hasSynchronized = true;
 							}
 							else
 							{
@@ -295,7 +291,7 @@ namespace AntiGitLibrary
 								if (Math.Abs((verifyTo.LastWriteTime - verifyFron.LastWriteTime).TotalSeconds) > 1) // Check if date is different
 									Debugger.Break();
 #endif
-								hasSynchronized = true;
+								//								someFilesHaveChanged = true;
 								if (compilationTime != null)
 									MyPendingFiles.Remove(localFile);
 							}
@@ -311,7 +307,7 @@ namespace AntiGitLibrary
 				var subDirectories = Directory.GetDirectories(sourcePath);
 				foreach (var sourceDir in subDirectories)
 				{
-					SyncGit(ref returnOldestFile, ref hasSynchronized, scan, sourceDir, targetPath, ref returnNewMemoryFile, sourceRoot, compilationTime);
+					SyncGit(ref returnOldestFile, ref someFilesHaveChanged, scan, sourceDir, targetPath, ref returnNewMemoryFile, sourceRoot, compilationTime);
 				}
 			}
 		}
@@ -438,7 +434,7 @@ namespace AntiGitLibrary
 		{
 			if (memory != null && !string.IsNullOrEmpty(path))
 			{
-				var file = Path.Combine(Context.AppDir.FullName,  Support.GetHashCode(path) + ".txt");
+				var file = Path.Combine(Context.AppDir.FullName, Support.GetHashCode(path) + ".txt");
 				File.WriteAllLines(file, memory.Cast<string>().ToArray());
 			}
 		}
@@ -472,7 +468,7 @@ namespace AntiGitLibrary
 			return null;
 		}
 
-	
+
 
 
 
@@ -489,19 +485,22 @@ namespace AntiGitLibrary
 
 		private class PendingFiles : List<string>
 		{
-			public void Add(FileInfo file)
+			public bool Add(FileInfo file)
 			{
-				Remove(file);
+				var exists = Remove(file);
 				Add(file.FullName.ToLower());
+				return !exists;
 			}
-			public void Remove(FileInfo file)
+			public bool Remove(FileInfo file)
 			{
 				var filename = file.FullName.ToLower();
 				var pending = Find(x => x == filename);
 				if (pending != null)
 				{
 					Remove(pending);
+					return true;
 				}
+				return false;
 			}
 			public bool Contain(FileInfo file)
 			{
