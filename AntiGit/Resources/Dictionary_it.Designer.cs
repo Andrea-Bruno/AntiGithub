@@ -8,7 +8,7 @@
 // </auto-generated>
 //------------------------------------------------------------------------------
 
-namespace AntiGit.Resources {
+namespace AntiGitLibrary.Resources {
     using System;
     
     
@@ -39,7 +39,7 @@ namespace AntiGit.Resources {
         public static global::System.Resources.ResourceManager ResourceManager {
             get {
                 if (object.ReferenceEquals(resourceMan, null)) {
-                    global::System.Resources.ResourceManager temp = new global::System.Resources.ResourceManager("AntiGit.Resources.Dictionary_it", typeof(Dictionary_it).Assembly);
+                    global::System.Resources.ResourceManager temp = new global::System.Resources.ResourceManager("AntiGitLibrary.Resources.Dictionary_it", typeof(Dictionary_it).Assembly);
                     resourceMan = temp;
                 }
                 return resourceMan;

@@ -106,9 +106,9 @@
     </BundleResource>
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\..\AntiGit\AntiGit.csproj">
+    <ProjectReference Include="..\..\AntiGit\AntiGitLibrary.csproj">
       <Project>{fcb5bd6a-7172-4728-ade2-81af7cea0c21}</Project>
-      <Name>AntiGit</Name>
+      <Name>AntiGitLibrary</Name>
     </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildExtensionsPath)\Xamarin\Mac\Xamarin.Mac.CSharp.targets" />

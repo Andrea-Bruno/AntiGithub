@@ -1,12 +1,14 @@
 ﻿using System;
-using System.Diagnostics;
 using System.IO;
-using static System.Net.WebRequestMethods;
 
-namespace AntiGit
+namespace AntiGitLibrary
 {
 	internal static class Support
 	{
+	private	const int HR_ERROR_HANDLE_DISK_FULL = unchecked((int)0x80070027);
+	private	const int HR_ERROR_DISK_FULL = unchecked((int)0x80070070);
+		private const int ERROR_SHARING_VIOLATION = unchecked((int)0x80070020);
+
 #if MAC
 		public static void ExecuteMacCommand(string command, string arguments)
 		{
@@ -17,8 +19,6 @@ namespace AntiGit
 #endif
 		public static bool IsDiskFull(Exception ex)
 		{
-			const int HR_ERROR_HANDLE_DISK_FULL = unchecked((int)0x80070027);
-			const int HR_ERROR_DISK_FULL = unchecked((int)0x80070070);
 			return ex.HResult == HR_ERROR_HANDLE_DISK_FULL
 						 || ex.HResult == HR_ERROR_DISK_FULL;
 		}
@@ -70,12 +70,13 @@ namespace AntiGit
 						stream.Close();
 					}
 				}
-				catch (IOException)
+				catch (IOException ex)
 				{
 					//the file is unavailable because it is:
 					//still being written to
 					//or being processed by another thread
-					return true;
+					if (ex.HResult == ERROR_SHARING_VIOLATION)
+						return true;
 				}
 			}
 			//file is not locked
@@ -119,6 +120,24 @@ namespace AntiGit
 			return IsLocalPath(path);
 		}
 
+		public static ulong GetHashCode(string input, bool considerSpaces = false)
+		{
+			if (!considerSpaces)
+			{
+				input = input.Replace("\t", "");
+				input = input.Replace(" ", "");
+			}
+			input = input.Replace("\r", "");
+			input = input.Replace("\n", "");
+			const ulong value = 3074457345618258791ul;
+			var hashedValue = value;
+			foreach (var t in input)
+			{
+				hashedValue += t;
+				hashedValue *= value;
+			}
+			return hashedValue;
+		}
 
 	}
 }

@@ -5,7 +5,7 @@ using System.Linq;
 #if !DEBUG
 using System.Threading.Tasks;
 #endif
-namespace AntiGit
+namespace AntiGitLibrary
 {
 	static class Merge
 	{
@@ -428,7 +428,7 @@ namespace AntiGit
 		{
 			var fileLines = File.ReadAllLines(file.FullName);
 			var listFile = new List<Line>();
-			fileLines.ToList().ForEach(x => listFile.Add(new Line { Text = x, Hash = GetHashCode(x) }));
+			fileLines.ToList().ForEach(x => listFile.Add(new Line { Text = x, Hash = Support.GetHashCode(x, true) }));
 			return listFile;
 		}
 
@@ -436,22 +436,6 @@ namespace AntiGit
 		{
 			public string Text;
 			public ulong Hash;
-		}
-
-		public static ulong GetHashCode(string input)
-		{
-			//input = input.Replace("\t", "");
-			//input = input.Replace(" ", "");
-			input = input.Replace("\r", "");
-			input = input.Replace("\n", "");
-			const ulong value = 3074457345618258791ul;
-			var hashedValue = value;
-			foreach (var t in input)
-			{
-				hashedValue += t;
-				hashedValue *= value;
-			}
-			return hashedValue;
 		}
 	}
 

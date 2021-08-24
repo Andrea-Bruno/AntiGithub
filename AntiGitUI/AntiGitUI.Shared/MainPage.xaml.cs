@@ -24,7 +24,7 @@ namespace AntiGitUI
 	/// </summary>
 	public sealed partial class MainPage : Page
 	{
-		public AntiGit.Context AntiGithub;
+		public AntiGitLibrary.Context AntiGithub;
 
 		public MainPage()
 		{
@@ -35,7 +35,7 @@ namespace AntiGitUI
 				var dialog = new MessageDialog(Message);
 				_ = dialog.ShowAsync();
 			}
-			AntiGithub = new AntiGit.Context(Alert);
+			AntiGithub = new AntiGitLibrary.Context(Alert);
 			Source.Text = AntiGithub.SourceDir ?? "";
 			Target.Text = AntiGithub.TargetDir ?? "";
 			Git.Text = AntiGithub.GitDir ?? "";

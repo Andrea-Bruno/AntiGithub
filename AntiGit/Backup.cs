@@ -8,7 +8,7 @@ using System.Threading;
 using System.Runtime.InteropServices;
 #endif
 
-namespace AntiGit
+namespace AntiGitLibrary
 {
 	internal class Backup
 	{

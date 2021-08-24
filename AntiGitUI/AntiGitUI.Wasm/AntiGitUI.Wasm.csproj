@@ -45,7 +45,7 @@
     <PackageReference Include="Uno.Wasm.Bootstrap.DevServer" Version="2.1.0" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\..\AntiGit\AntiGit.csproj" />
+    <ProjectReference Include="..\..\AntiGit\AntiGitLibrary.csproj" />
   </ItemGroup>
   <Import Project="..\AntiGitUI.Shared\AntiGitUI.Shared.projitems" Label="Shared" Condition="Exists('..\AntiGitUI.Shared\AntiGitUI.Shared.projitems')" />
 </Project>

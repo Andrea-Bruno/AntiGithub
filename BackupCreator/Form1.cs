@@ -1,11 +1,11 @@
 ﻿using System;
 using System.Windows.Forms;
 
-namespace BackupCreator
+namespace AntiGitUi
 {
 	public partial class Form1 : Form
 	{
-		public AntiGit.Context AntiGithub;
+		public AntiGitLibrary.Context AntiGithub;
 
 		public Form1()
 		{			
@@ -29,7 +29,7 @@ namespace BackupCreator
 			{
 				MessageBox.Show(Message);
 			}
-			AntiGithub = new AntiGit.Context(Alert);
+			AntiGithub = new AntiGitLibrary.Context(Alert);
 			Source.Text = AntiGithub.SourceDir;
 			Target.Text = AntiGithub.TargetDir;
 			Git.Text = AntiGithub.GitDir;

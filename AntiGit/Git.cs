@@ -6,7 +6,7 @@ using System.IO;
 using System.Linq;
 using System.Threading;
 
-namespace AntiGit
+namespace AntiGitLibrary
 {
 	class Git
 	{
@@ -438,7 +438,7 @@ namespace AntiGit
 		{
 			if (memory != null && !string.IsNullOrEmpty(path))
 			{
-				var file = Path.Combine(Context.AppDir.FullName, Merge.GetHashCode(path) + ".txt");
+				var file = Path.Combine(Context.AppDir.FullName,  Support.GetHashCode(path) + ".txt");
 				File.WriteAllLines(file, memory.Cast<string>().ToArray());
 			}
 		}
@@ -447,7 +447,7 @@ namespace AntiGit
 		{
 			if (!string.IsNullOrEmpty(path))
 			{
-				var file = Path.Combine(Context.AppDir.FullName, Merge.GetHashCode(path) + ".txt");
+				var file = Path.Combine(Context.AppDir.FullName, Support.GetHashCode(path) + ".txt");
 				var fileInfo = new FileInfo(file);
 				if (fileInfo.Exists)
 				{
@@ -460,7 +460,7 @@ namespace AntiGit
 		{
 			if (!string.IsNullOrEmpty(path))
 			{
-				var file = Path.Combine(Context.AppDir.FullName, Merge.GetHashCode(path) + ".txt");
+				var file = Path.Combine(Context.AppDir.FullName, Support.GetHashCode(path) + ".txt");
 				if (new FileInfo(file).Exists)
 				{
 					var list = File.ReadAllLines(file);

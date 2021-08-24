@@ -14,7 +14,7 @@
     <Content Include="Assets\Fonts\uno-fluentui-assets.ttf" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\..\AntiGit\AntiGit.csproj" />
+    <ProjectReference Include="..\..\AntiGit\AntiGitLibrary.csproj" />
     <ProjectReference Include="..\AntiGitUI.Skia.WPF\AntiGitUI.Skia.WPF.csproj" />
   </ItemGroup>
 </Project>

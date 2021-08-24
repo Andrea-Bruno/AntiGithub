@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Windows.Forms;
 
-namespace BackupCreator
+namespace AntiGitUi
 {
 	static class Program
 	{

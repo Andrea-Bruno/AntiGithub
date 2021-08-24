@@ -2,7 +2,7 @@
 using System.ComponentModel;
 using System.Windows.Forms;
 
-namespace BackupCreator
+namespace AntiGitUi
 {
 	partial class Form1
 	{

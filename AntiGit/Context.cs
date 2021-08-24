@@ -13,7 +13,7 @@ using System.Threading.Tasks;
 using System.Runtime.InteropServices;
 #endif
 
-namespace AntiGit
+namespace AntiGitLibrary
 {
 	public class Context
 	{

@@ -20,7 +20,7 @@
     <PackageReference Include="Uno.UI.RemoteControl" Version="3.8.13" Condition="'$(Configuration)'=='Debug'" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\..\AntiGit\AntiGit.csproj" />
+    <ProjectReference Include="..\..\AntiGit\AntiGitLibrary.csproj" />
   </ItemGroup>
   <Import Project="..\AntiGitUI.Shared\AntiGitUI.Shared.projitems" Label="Shared" />
 </Project>

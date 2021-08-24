@@ -6,7 +6,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\AntiGit\AntiGit.csproj" />
+    <ProjectReference Include="..\AntiGit\AntiGitLibrary.csproj" />
   </ItemGroup>
 
 </Project>
