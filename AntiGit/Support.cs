@@ -1,12 +1,13 @@
 ﻿using System;
 using System.IO;
+using System.Linq;
 
 namespace AntiGitLibrary
 {
 	internal static class Support
 	{
-	private	const int HR_ERROR_HANDLE_DISK_FULL = unchecked((int)0x80070027);
-	private	const int HR_ERROR_DISK_FULL = unchecked((int)0x80070070);
+		private const int HR_ERROR_HANDLE_DISK_FULL = unchecked((int)0x80070027);
+		private const int HR_ERROR_DISK_FULL = unchecked((int)0x80070070);
 		private const int ERROR_SHARING_VIOLATION = unchecked((int)0x80070020);
 
 #if MAC
@@ -108,6 +109,26 @@ namespace AntiGitLibrary
 			_ = WaitFileUnlocked(new FileInfo(fileName));
 		}
 
+		public static bool IsLink(DirectoryInfo path)
+		{
+			return path.Exists && path.GetFileSystemInfos().ToList().Find(x => x.Name == "target.lnk") != null;
+		}
+
+		public static bool IsLink(string pathName)
+		{
+			return IsLink(new DirectoryInfo(pathName));
+		}
+
+		public static bool IsFtpPath(DirectoryInfo path)
+		{
+			return path.FullName.StartsWith("ftp:", StringComparison.InvariantCultureIgnoreCase);				
+		}
+
+		public static bool IsFtpPath(string pathName)
+		{
+			return IsFtpPath(new DirectoryInfo(pathName));
+		}
+
 		public static bool IsLocalPath(DirectoryInfo path)
 		{
 			DriveInfo drive = new DriveInfo(path.Root.FullName);
@@ -116,8 +137,7 @@ namespace AntiGitLibrary
 
 		public static bool IsLocalPath(string pathName)
 		{
-			var path = new DirectoryInfo(pathName);
-			return IsLocalPath(path);
+			return IsLocalPath(new DirectoryInfo(pathName));
 		}
 
 		public static ulong GetHashCode(string input, bool considerSpaces = false)

@@ -469,10 +469,6 @@ namespace AntiGitLibrary
 		}
 
 
-
-
-
-
 		private static bool IsTextFiles(FileInfo file)
 		{
 			var extension = file.Extension;
@@ -616,7 +612,7 @@ namespace AntiGitLibrary
 					notFind++;
 			}
 			var total = (find + notFind);
-			return total == 0 ? false : find / (double)total > limit;
+			return total != 0 && find / (double)total > limit;
 		}
 	}
 }

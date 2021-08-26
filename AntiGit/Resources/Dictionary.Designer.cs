@@ -115,6 +115,24 @@ namespace AntiGitLibrary.Resources {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to FTP paths are not allowed.
+        /// </summary>
+        internal static string Error4 {
+            get {
+                return ResourceManager.GetString("Error4", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Links to other directories are not allowed.
+        /// </summary>
+        internal static string Error5 {
+            get {
+                return ResourceManager.GetString("Error5", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to File permanently locked by a process.
         /// </summary>
         internal static string FileLocked {

@@ -174,7 +174,7 @@ namespace AntiGitUi
 			this.Controls.Add(this.Source);
 			this.Name = "Form1";
 			this.ShowInTaskbar = false;
-			this.Text = "Backup creator";
+			this.Text = "AntiGit";
 			this.WindowState = System.Windows.Forms.FormWindowState.Minimized;
 			this.FormClosed += new System.Windows.Forms.FormClosedEventHandler(this.Form1_FormClosed);
 			this.Load += new System.EventHandler(this.Form1_Load);

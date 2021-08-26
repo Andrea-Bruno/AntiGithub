@@ -135,6 +135,12 @@
   <data name="Error3" xml:space="preserve">
     <value>The source directory cannot be remote</value>
   </data>
+  <data name="Error4" xml:space="preserve">
+    <value>FTP paths are not allowed</value>
+  </data>
+  <data name="Error5" xml:space="preserve">
+    <value>Links to other directories are not allowed</value>
+  </data>
   <data name="FileLocked" xml:space="preserve">
     <value>File permanently locked by a process</value>
   </data>

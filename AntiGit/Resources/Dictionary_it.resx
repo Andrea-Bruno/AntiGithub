@@ -177,4 +177,10 @@
   <data name="Warning5" xml:space="preserve">
     <value>È possibile eliminare solo le directory vuote</value>
   </data>
+  <data name="Error4" xml:space="preserve">
+    <value>Non sono ammessi percorsi FTP</value>
+  </data>
+  <data name="Error5" xml:space="preserve">
+    <value>Link a altre directory non sono ammessi</value>
+  </data>
 </root>

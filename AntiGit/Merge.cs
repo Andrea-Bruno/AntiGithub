@@ -320,7 +320,33 @@ namespace AntiGitLibrary
 		private static List<Block> ProcessAllCombination(HashCheck[] from, HashCheck[] to, ulong[] fromHash, ulong[] toHash)
 		{
 			var blocks = new List<Block>();
-			var initialSize = to.Length < from.Length ? to.Length : from.Length;
+			var max = to.Length > from.Length ? to.Length : from.Length;
+			var firstDifferenceFromStart = 0;
+			for (int i = 0; i < from.Length && i < to.Length; i++)
+			{
+				if (from[i].Hash == to[i].Hash)
+					firstDifferenceFromStart++;
+				else
+					break;				
+			}
+			var L2 = max - firstDifferenceFromStart;
+			var maxL = firstDifferenceFromStart > L2 ? firstDifferenceFromStart : L2;
+
+			var firstDifferenceFromEnd = 0;
+			for (int i = 0; i < from.Length && i < to.Length; i++)
+			{
+				if (from[from.Length - 1 - i].Hash == to[to.Length - 1 - i].Hash)
+					firstDifferenceFromEnd++;
+				else
+					break;
+			}
+			var R2 = max - firstDifferenceFromEnd;
+			var maxR = firstDifferenceFromEnd > R2 ? firstDifferenceFromEnd : R2;
+
+			var initialSize = maxL < maxR? maxL : maxR;
+			//var initialSize = to.Length < from.Length ? to.Length : from.Length;
+
+
 			for (int size = initialSize; size > 0; size--)
 			{
 				int used = 0;

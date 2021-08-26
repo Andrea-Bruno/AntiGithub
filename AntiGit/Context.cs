@@ -22,7 +22,7 @@ namespace AntiGitLibrary
 		private readonly Git Git;
 
 		public Context(Action<string> alert = null)
-		{	
+		{
 			WriteOutput(Info);
 			Backup = new Backup(this);
 			Git = new Git(this);
@@ -55,7 +55,7 @@ namespace AntiGitLibrary
 		public void StopSyncGit() => Git.StopSyncGit();
 		public bool SyncGitRunning => Git.SyncGitRunning;
 		public void StartBackup() => Backup.Start(SourceDir, TargetDir);
-		public bool BackupRunning => Backup.BackupRunning !=0;
+		public bool BackupRunning => Backup.BackupRunning != 0;
 		public static readonly string[] ExcludeDir = { "bin", "obj", ".vs", "packages" };
 
 
@@ -188,10 +188,10 @@ namespace AntiGitLibrary
 					Alert("Git " + Resources.Dictionary.DirectoryNotFound);
 				else if (!Directory.Exists(_sourceDir))
 					Alert("Source " + Resources.Dictionary.DirectoryNotFound);
-				else if (!Support.IsLocalPath(_sourceDir))
-					Alert(Resources.Dictionary.Error3);
-				else
+				else if (CheckSourceAndGitDirectory())
+				{
 					Git.FullSyncGit(_sourceDir, _gitDir);
+				}
 			}
 		}
 
@@ -223,6 +223,7 @@ namespace AntiGitLibrary
 			get => _sourceDir;
 			set
 			{
+				TrimPathName(ref value);
 				if (_sourceDir != value)
 				{
 					_sourceDir = value;
@@ -246,6 +247,7 @@ namespace AntiGitLibrary
 			get => _targetDir;
 			set
 			{
+				TrimPathName(ref value);
 				if (_targetDir != value)
 				{
 					_targetDir = value;
@@ -263,6 +265,7 @@ namespace AntiGitLibrary
 			get => _gitDir;
 			set
 			{
+				TrimPathName(ref value);
 				if (_gitDir != value)
 				{
 					_gitDir = value;
@@ -279,18 +282,21 @@ namespace AntiGitLibrary
 			}
 		}
 
+		private void TrimPathName(ref string path)
+		{
+			char[] chrs = { '\\', '/'};
+			path = path.Trim();
+			path = path.TrimEnd(chrs);
+		}
+
 		private bool CheckSourceAndGit()
 		{
 			if (!string.IsNullOrEmpty(_sourceDir) && !string.IsNullOrEmpty(_gitDir))
 			{
 				try
 				{
+					CheckSourceAndGitDirectory();
 					var source = new DirectoryInfo(_sourceDir);
-					if (!Support.IsLocalPath(source))
-					{
-						Alert(Resources.Dictionary.Error3);
-						return false;
-					}
 					var git = new DirectoryInfo(_gitDir);
 					var sourceCount = source.GetFileSystemInfos().Length;
 					var gitCount = git.GetFileSystemInfos().Length;
@@ -303,11 +309,45 @@ namespace AntiGitLibrary
 						//}
 					}
 				}
-				catch (Exception e)
+				catch (Exception ex)
 				{
-					Alert(e.Message);
+					Alert(ex.Message);
 					return false;
 				}
+			}
+			return true;
+		}
+		private bool CheckSourceAndGitDirectory()
+		{
+			try
+			{
+				var source = new DirectoryInfo(_sourceDir);
+				if (!Support.IsLocalPath(source))
+				{
+					Alert(Resources.Dictionary.Error3);
+					return false;
+				}
+				if (Support.IsLink(source))
+				{
+					Alert(Resources.Dictionary.Error5 + ":" + Environment.NewLine + source.FullName);
+					return false;
+				}
+				var git = new DirectoryInfo(_gitDir);
+				if (Support.IsLink(git))
+				{
+					Alert(Resources.Dictionary.Error5 + ":" + Environment.NewLine + git.FullName);
+					return false;
+				}
+				if (Support.IsFtpPath(git))
+				{
+					Alert(Resources.Dictionary.Error4);
+					return false;
+				}
+			}
+			catch (Exception ex)
+			{
+				Alert(ex.Message);
+				return false;
 			}
 			return true;
 		}
