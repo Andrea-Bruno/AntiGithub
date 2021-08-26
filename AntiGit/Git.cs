@@ -242,7 +242,8 @@ namespace AntiGitLibrary
 
 					if (copy == CopyType.None) continue;
 
-					if (copy == CopyType.CopyToRemote && compilationTime != null && compilationTime != DateTime.MinValue && from.LastWriteTimeUtc > compilationTime) // Copy to remote only the files of the latest version working at compile time
+					var fromLastWriteTimeUtc = from.LastWriteTimeUtc < from.CreationTimeUtc ? from.CreationTimeUtc : from.LastWriteTimeUtc; // In windows there is a bug: new files have the property of the last writing, wrong
+					if (copy == CopyType.CopyToRemote && compilationTime != null && compilationTime != DateTime.MinValue && fromLastWriteTimeUtc > compilationTime) // Copy to remote only the files of the latest version working at compile time
 					{
 						if (IsTextFiles(from))
 							if (MyPendingFiles.Add(from))
