@@ -4,8 +4,15 @@
     <OutputType>Exe</OutputType>
     <TargetFramework>net5.0</TargetFramework>
     <NoWarn>NU1701</NoWarn>
+    <Configurations>Debug;Release;Test</Configurations>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)'=='Debug'">
+    <MonoRuntimeDebuggerEnabled>true</MonoRuntimeDebuggerEnabled>
+    <DefineConstants>$(DefineConstants);TRACE;DEBUG</DefineConstants>
+    <DebugType>portable</DebugType>
+    <DebugSymbols>true</DebugSymbols>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)'=='Test'">
     <MonoRuntimeDebuggerEnabled>true</MonoRuntimeDebuggerEnabled>
     <DefineConstants>$(DefineConstants);TRACE;DEBUG</DefineConstants>
     <DebugType>portable</DebugType>
@@ -41,6 +48,9 @@
     <PackageReference Include="Uno.Extensions.Logging.WebAssembly.Console" Version="1.0.1" />
     <PackageReference Include="Uno.UI.WebAssembly" Version="3.8.13" />
     <PackageReference Include="Uno.UI.RemoteControl" Version="3.8.13" Condition="'$(Configuration)'=='Debug'" />
+    <PackageReference Include="Uno.UI.RemoteControl" Condition="'$(Configuration)'=='Test'">
+      <Version>3.8.13</Version>
+    </PackageReference>
     <PackageReference Include="Uno.Wasm.Bootstrap" Version="2.1.0" />
     <PackageReference Include="Uno.Wasm.Bootstrap.DevServer" Version="2.1.0" />
   </ItemGroup>

@@ -3,7 +3,9 @@
   <PropertyGroup>
     <OutputType Condition="'$(Configuration)'=='Release'">WinExe</OutputType>
     <OutputType Condition="'$(Configuration)'=='Debug'">Exe</OutputType>
+    <OutputType Condition="'$(Configuration)'=='Test'">Exe</OutputType>
     <TargetFramework>net5.0</TargetFramework>
+    <Configurations>Debug;Release;Test</Configurations>
   </PropertyGroup>
   <ItemGroup Condition="exists('..\AntiGitUI.UWP')">
     <EmbeddedResource Include="..\AntiGitUI.UWP\Package.appxmanifest" LogicalName="Package.appxmanifest" />
@@ -18,6 +20,9 @@
     <PackageReference Include="Microsoft.Extensions.Logging.Console" Version="5.0.0" />
     <PackageReference Include="Uno.UI.Skia.Gtk" Version="3.8.13" />
     <PackageReference Include="Uno.UI.RemoteControl" Version="3.8.13" Condition="'$(Configuration)'=='Debug'" />
+    <PackageReference Include="Uno.UI.RemoteControl" Condition="'$(Configuration)'=='Test'">
+      <Version>3.8.13</Version>
+    </PackageReference>
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\AntiGit\AntiGitLibrary.csproj" />

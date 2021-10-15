@@ -27,13 +27,17 @@ namespace AntiGitLibrary
 			Backup = new Backup(this);
 			Git = new Git(this);
 			_alert = alert;
+#if TEST
+			_sourceDir = @"c:\test";
+			_targetDir = "";
+			_gitDir = @"\\share\G\test";
+#else
 			_sourceDir = getValue("source"); // ?? Directory.GetCurrentDirectory();
 			_targetDir = getValue("target"); // ?? Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), "backup");
-
 			if (string.IsNullOrEmpty(_targetDir))
-				_targetDir = GetDefaultBackupPosition();
+				_targetDir = GetDefaultBackupPosition();			
 			_gitDir = getValue("git");
-
+#endif
 			SetCurrentDateTime();
 			BackupTimer = new Timer(x =>
 			{
@@ -56,8 +60,6 @@ namespace AntiGitLibrary
 		public bool SyncGitRunning => Git.SyncGitRunning;
 		public void StartBackup() => Backup.Start(SourceDir, TargetDir);
 		public bool BackupRunning => Backup.BackupRunning != 0;
-		public static readonly string[] ExcludeDir = { "bin", "obj", ".vs", "packages" };
-
 
 		public struct SystemTime
 		{
@@ -374,10 +376,12 @@ namespace AntiGitLibrary
 
 		private void SetValue(string name, string value)
 		{
+#if !TEST
 			if (!AppDir.Exists)
 				AppDir.Create();
 			var file = Path.Combine(AppDir.FullName, name + ".txt");
 			File.WriteAllText(file, value);
+#endif
 		}
 
 		private static bool _requestAdmin;

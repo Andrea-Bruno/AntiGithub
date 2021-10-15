@@ -22,7 +22,7 @@ namespace AntiGitLibrary.Resources {
     [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Resources.Tools.StronglyTypedResourceBuilder", "17.0.0.0")]
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
     [global::System.Runtime.CompilerServices.CompilerGeneratedAttribute()]
-    internal class Dictionary {
+    public class Dictionary {
         
         private static global::System.Resources.ResourceManager resourceMan;
         
@@ -36,7 +36,7 @@ namespace AntiGitLibrary.Resources {
         ///   Returns the cached ResourceManager instance used by this class.
         /// </summary>
         [global::System.ComponentModel.EditorBrowsableAttribute(global::System.ComponentModel.EditorBrowsableState.Advanced)]
-        internal static global::System.Resources.ResourceManager ResourceManager {
+        public static global::System.Resources.ResourceManager ResourceManager {
             get {
                 if (object.ReferenceEquals(resourceMan, null)) {
                     global::System.Resources.ResourceManager temp = new global::System.Resources.ResourceManager("AntiGitLibrary.Resources.Dictionary", typeof(Dictionary).Assembly);
@@ -51,7 +51,7 @@ namespace AntiGitLibrary.Resources {
         ///   resource lookups using this strongly typed resource class.
         /// </summary>
         [global::System.ComponentModel.EditorBrowsableAttribute(global::System.ComponentModel.EditorBrowsableState.Advanced)]
-        internal static global::System.Globalization.CultureInfo Culture {
+        public static global::System.Globalization.CultureInfo Culture {
             get {
                 return resourceCulture;
             }
@@ -63,7 +63,7 @@ namespace AntiGitLibrary.Resources {
         /// <summary>
         ///   Looks up a localized string similar to I fixed the system clock!.
         /// </summary>
-        internal static string ClockFixed {
+        public static string ClockFixed {
             get {
                 return ResourceManager.GetString("ClockFixed", resourceCulture);
             }
@@ -72,7 +72,7 @@ namespace AntiGitLibrary.Resources {
         /// <summary>
         ///   Looks up a localized string similar to The computer clock is.
         /// </summary>
-        internal static string ComputerClockIs {
+        public static string ComputerClockIs {
             get {
                 return ResourceManager.GetString("ComputerClockIs", resourceCulture);
             }
@@ -81,7 +81,7 @@ namespace AntiGitLibrary.Resources {
         /// <summary>
         ///   Looks up a localized string similar to Directory not found.
         /// </summary>
-        internal static string DirectoryNotFound {
+        public static string DirectoryNotFound {
             get {
                 return ResourceManager.GetString("DirectoryNotFound", resourceCulture);
             }
@@ -90,7 +90,7 @@ namespace AntiGitLibrary.Resources {
         /// <summary>
         ///   Looks up a localized string similar to Error: During the first setup Git and Source cannot contain files at the same time: If you want to synchronize this computer with the shared Git, then Git must contain the files and the Source directory must be empty. If you want to create a shared Git, then Git must be empty and Source must contain the files you want to share..
         /// </summary>
-        internal static string Error1 {
+        public static string Error1 {
             get {
                 return ResourceManager.GetString("Error1", resourceCulture);
             }
@@ -99,7 +99,7 @@ namespace AntiGitLibrary.Resources {
         /// <summary>
         ///   Looks up a localized string similar to Error: The application must be run in administrator mode.
         /// </summary>
-        internal static string Error2 {
+        public static string Error2 {
             get {
                 return ResourceManager.GetString("Error2", resourceCulture);
             }
@@ -108,7 +108,7 @@ namespace AntiGitLibrary.Resources {
         /// <summary>
         ///   Looks up a localized string similar to The source directory cannot be remote.
         /// </summary>
-        internal static string Error3 {
+        public static string Error3 {
             get {
                 return ResourceManager.GetString("Error3", resourceCulture);
             }
@@ -117,7 +117,7 @@ namespace AntiGitLibrary.Resources {
         /// <summary>
         ///   Looks up a localized string similar to FTP paths are not allowed.
         /// </summary>
-        internal static string Error4 {
+        public static string Error4 {
             get {
                 return ResourceManager.GetString("Error4", resourceCulture);
             }
@@ -126,7 +126,7 @@ namespace AntiGitLibrary.Resources {
         /// <summary>
         ///   Looks up a localized string similar to Links to other directories are not allowed.
         /// </summary>
-        internal static string Error5 {
+        public static string Error5 {
             get {
                 return ResourceManager.GetString("Error5", resourceCulture);
             }
@@ -135,7 +135,7 @@ namespace AntiGitLibrary.Resources {
         /// <summary>
         ///   Looks up a localized string similar to File permanently locked by a process.
         /// </summary>
-        internal static string FileLocked {
+        public static string FileLocked {
             get {
                 return ResourceManager.GetString("FileLocked", resourceCulture);
             }
@@ -144,7 +144,7 @@ namespace AntiGitLibrary.Resources {
         /// <summary>
         ///   Looks up a localized string similar to NOTE: The SOURCE directory is the one with the files to keep (your projects and your solutions must be here), in the TARGET directory the daily backups will be saved, the GIT directory is a remote directory accessible to all those who work on the same source files, for example, the git directory can correspond to a disk of network or to the address of a pen drive connected to the router, in this directory Context will create a synchronized version of the source in real time..
         /// </summary>
-        internal static string Info {
+        public static string Info {
             get {
                 return ResourceManager.GetString("Info", resourceCulture);
             }
@@ -153,7 +153,7 @@ namespace AntiGitLibrary.Resources {
         /// <summary>
         ///   Looks up a localized string similar to To restore the backup you need to copy the desired version where you prefer, via the command line (copy and paste does not work).
         /// </summary>
-        internal static string Instruction1 {
+        public static string Instruction1 {
             get {
                 return ResourceManager.GetString("Instruction1", resourceCulture);
             }
@@ -162,7 +162,7 @@ namespace AntiGitLibrary.Resources {
         /// <summary>
         ///   Looks up a localized string similar to &quot;Please adjust the system clock!&quot;.
         /// </summary>
-        internal static string PleaseAdjustClock {
+        public static string PleaseAdjustClock {
             get {
                 return ResourceManager.GetString("PleaseAdjustClock", resourceCulture);
             }
@@ -171,7 +171,7 @@ namespace AntiGitLibrary.Resources {
         /// <summary>
         ///   Looks up a localized string similar to Source not found!.
         /// </summary>
-        internal static string SourceNotFound {
+        public static string SourceNotFound {
             get {
                 return ResourceManager.GetString("SourceNotFound", resourceCulture);
             }
@@ -180,7 +180,7 @@ namespace AntiGitLibrary.Resources {
         /// <summary>
         ///   Looks up a localized string similar to Suggest: It is recommended setting Visual Studio Auto Recovery to 1 minute: tools-&gt;Options-&gt;Environment-AutoRecover.
         /// </summary>
-        internal static string Suggest1 {
+        public static string Suggest1 {
             get {
                 return ResourceManager.GetString("Suggest1", resourceCulture);
             }
@@ -189,7 +189,7 @@ namespace AntiGitLibrary.Resources {
         /// <summary>
         ///   Looks up a localized string similar to Target not found!.
         /// </summary>
-        internal static string TargetNotFound {
+        public static string TargetNotFound {
             get {
                 return ResourceManager.GetString("TargetNotFound", resourceCulture);
             }
@@ -198,7 +198,7 @@ namespace AntiGitLibrary.Resources {
         /// <summary>
         ///   Looks up a localized string similar to The current computer time is incorrect: It is.
         /// </summary>
-        internal static string TimeIncorrect {
+        public static string TimeIncorrect {
             get {
                 return ResourceManager.GetString("TimeIncorrect", resourceCulture);
             }
@@ -207,7 +207,7 @@ namespace AntiGitLibrary.Resources {
         /// <summary>
         ///   Looks up a localized string similar to The current time could not be checked online.
         /// </summary>
-        internal static string TimeNotCheckedOnline {
+        public static string TimeNotCheckedOnline {
             get {
                 return ResourceManager.GetString("TimeNotCheckedOnline", resourceCulture);
             }
@@ -216,7 +216,7 @@ namespace AntiGitLibrary.Resources {
         /// <summary>
         ///   Looks up a localized string similar to Warning: Git sync cannot be started because the source and git directories contain different projects. Check the settings!.
         /// </summary>
-        internal static string Warning1 {
+        public static string Warning1 {
             get {
                 return ResourceManager.GetString("Warning1", resourceCulture);
             }
@@ -225,7 +225,7 @@ namespace AntiGitLibrary.Resources {
         /// <summary>
         ///   Looks up a localized string similar to More than one file has been deleted, for security reasons we will not synchronize if more than one file is deleted!.
         /// </summary>
-        internal static string Warning2 {
+        public static string Warning2 {
             get {
                 return ResourceManager.GetString("Warning2", resourceCulture);
             }
@@ -234,7 +234,7 @@ namespace AntiGitLibrary.Resources {
         /// <summary>
         ///   Looks up a localized string similar to Unable to create symbolic links.
         /// </summary>
-        internal static string Warning3 {
+        public static string Warning3 {
             get {
                 return ResourceManager.GetString("Warning3", resourceCulture);
             }
@@ -243,7 +243,7 @@ namespace AntiGitLibrary.Resources {
         /// <summary>
         ///   Looks up a localized string similar to Unable to synchronize the clock.
         /// </summary>
-        internal static string Warning4 {
+        public static string Warning4 {
             get {
                 return ResourceManager.GetString("Warning4", resourceCulture);
             }
@@ -252,9 +252,18 @@ namespace AntiGitLibrary.Resources {
         /// <summary>
         ///   Looks up a localized string similar to Only empty directories can be deleted.
         /// </summary>
-        internal static string Warning5 {
+        public static string Warning5 {
             get {
                 return ResourceManager.GetString("Warning5", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Local files have been deleted while this app was turned off, this is not allowed and they will be restored!.
+        /// </summary>
+        public static string Warning6 {
+            get {
+                return ResourceManager.GetString("Warning6", resourceCulture);
             }
         }
     }

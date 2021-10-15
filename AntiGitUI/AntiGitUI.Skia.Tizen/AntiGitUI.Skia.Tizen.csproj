@@ -5,6 +5,7 @@
     <TargetFramework>tizen50</TargetFramework>
     <OutputType>Exe</OutputType>
     <DefineConstants>$(DefineConstants);__TIZEN__;</DefineConstants>
+    <Configurations>Debug;Release;Test</Configurations>
   </PropertyGroup>
   <ItemGroup>
     <Folder Include="lib\" />
@@ -23,6 +24,9 @@
     <PackageReference Include="SkiaSharp.Views" Version="2.80.2" />
     <PackageReference Include="Uno.UI.Skia.Tizen" Version="3.8.13" />
     <PackageReference Include="Uno.UI.RemoteControl" Version="3.8.13" Condition="'$(Configuration)'=='Debug'" />
+    <PackageReference Include="Uno.UI.RemoteControl" Condition="'$(Configuration)'=='Test'">
+      <Version>3.8.13</Version>
+    </PackageReference>
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\AntiGit\AntiGitLibrary.csproj" />

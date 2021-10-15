@@ -183,4 +183,7 @@
   <data name="Warning5" xml:space="preserve">
     <value>Only empty directories can be deleted</value>
   </data>
+  <data name="Warning6" xml:space="preserve">
+    <value>Local files have been deleted while this app was turned off, this is not allowed and they will be restored!</value>
+  </data>
 </root>

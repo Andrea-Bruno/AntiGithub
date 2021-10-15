@@ -130,10 +130,8 @@ namespace AntiGitLibrary
 			var fileAreChanged = false;
 			try
 			{
-
 				var dir = new DirectoryInfo(sourcePath);
-				var nameDir = dir.Name.ToLower();
-				if (!Context.ExcludeDir.Contains(nameDir) && (dir.Attributes & FileAttributes.Hidden) == 0)
+				if (!Support.ToExclude(dir.Name) && (dir.Attributes & FileAttributes.Hidden) == 0)
 				{
 					var relativeDirName = sourcePath.Substring(sourceRoot.Length);
 					var targetDirName = targetPath + relativeDirName;

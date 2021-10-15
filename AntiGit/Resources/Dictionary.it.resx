@@ -120,11 +120,11 @@
   <data name="ComputerClockIs" xml:space="preserve">
     <value>L'orologio del computer è</value>
   </data>
-  <data name="Warning4" xml:space="preserve">
-    <value>Impossibile sincronizzare l'orologio</value>
+  <data name="Warning1" xml:space="preserve">
+    <value>Avviso: la sincronizzazione di Git non può essere avviata perché le directory source e git contengono progetti diversi. Controlla le impostazioni!</value>
   </data>
-  <data name="Error3" xml:space="preserve">
-    <value>La directory di origine non può essere remota</value>
+  <data name="Info" xml:space="preserve">
+    <value>NOTA: La directory SOURCE è quella con i file da conservare (i tuoi progetti e le tue soluzioni devono essere qui), nella directory TARGET verranno salvati i backup giornalieri, la directory GIT è una directory remota accessibile a tutti coloro che lavorano sul stessi file sorgente, ad esempio, la directory git può corrispondere ad un disco di rete o all'indirizzo di una pen drive collegata al router, in questa directory Context creerà una versione sincronizzata della sorgente in tempo reale.</value>
   </data>
   <data name="DirectoryNotFound" xml:space="preserve">
     <value>Directory non trovata</value>
@@ -132,17 +132,14 @@
   <data name="TimeNotCheckedOnline" xml:space="preserve">
     <value>Non è stato possibile controllare l'ora corrente online</value>
   </data>
-  <data name="Warning1" xml:space="preserve">
-    <value>Avviso: la sincronizzazione di Git non può essere avviata perché le directory source e git contengono progetti diversi. Controlla le impostazioni!</value>
-  </data>
-  <data name="Warning2" xml:space="preserve">
-    <value>È stato eliminato più di un file, per motivi di sicurezza non effettueremo la sincronizzazione se viene eliminato più di un file!</value>
+  <data name="Error4" xml:space="preserve">
+    <value>Non sono ammessi percorsi FTP</value>
   </data>
   <data name="Error2" xml:space="preserve">
     <value>Errore: l'applicazione deve essere eseguita in modalità amministratore</value>
   </data>
-  <data name="PleaseAdjustClock" xml:space="preserve">
-    <value>"Si prega di regolare l'orologio di sistema!"</value>
+  <data name="Warning4" xml:space="preserve">
+    <value>Impossibile sincronizzare l'orologio</value>
   </data>
   <data name="Instruction1" xml:space="preserve">
     <value>Per ripristinare il backup devi copiare la versione desiderata dove preferisci, tramite la riga di comando (il copia e incolla non funziona)</value>
@@ -153,8 +150,11 @@
   <data name="Suggest1" xml:space="preserve">
     <value>Suggerimento: si consiglia di impostare il ripristino automatico di Visual Studio su 1 minuto: strumenti-&gt;Opzioni-&gt;Ambiente-Ripristino automatico</value>
   </data>
-  <data name="Info" xml:space="preserve">
-    <value>NOTA: La directory SOURCE è quella con i file da conservare (i tuoi progetti e le tue soluzioni devono essere qui), nella directory TARGET verranno salvati i backup giornalieri, la directory GIT è una directory remota accessibile a tutti coloro che lavorano sul stessi file sorgente, ad esempio, la directory git può corrispondere ad un disco di rete o all'indirizzo di una pen drive collegata al router, in questa directory Context creerà una versione sincronizzata della sorgente in tempo reale.</value>
+  <data name="Warning2" xml:space="preserve">
+    <value>È stato eliminato più di un file, per motivi di sicurezza non effettueremo la sincronizzazione se viene eliminato più di un file!</value>
+  </data>
+  <data name="Error3" xml:space="preserve">
+    <value>La directory di origine non può essere remota</value>
   </data>
   <data name="Error1" xml:space="preserve">
     <value>Errore: durante la prima configurazione Git e Source non possono contenere file contemporaneamente: se si desidera sincronizzare questo computer con il Git condiviso, allora Git deve contenere i file e la directory Source deve essere vuota. Se vuoi creare un Git condiviso, allora Git deve essere vuoto e Source deve contenere i file che vuoi condividere.</value>
@@ -171,16 +171,19 @@
   <data name="Warning3" xml:space="preserve">
     <value>Impossibile creare collegamenti simbolici</value>
   </data>
+  <data name="PleaseAdjustClock" xml:space="preserve">
+    <value>"Si prega di regolare l'orologio di sistema!"</value>
+  </data>
+  <data name="Error5" xml:space="preserve">
+    <value>Link a altre directory non sono ammessi</value>
+  </data>
   <data name="ClockFixed" xml:space="preserve">
     <value>Ho corretto l'orologio di sistema!</value>
   </data>
   <data name="Warning5" xml:space="preserve">
     <value>È possibile eliminare solo le directory vuote</value>
   </data>
-  <data name="Error4" xml:space="preserve">
-    <value>Non sono ammessi percorsi FTP</value>
-  </data>
-  <data name="Error5" xml:space="preserve">
-    <value>Link a altre directory non sono ammessi</value>
+  <data name="Warning6" xml:space="preserve">
+    <value>I file locali sono stati eliminati mentre questa app era disattivata, questo non è consentito e verranno ripristinati!</value>
   </data>
 </root>

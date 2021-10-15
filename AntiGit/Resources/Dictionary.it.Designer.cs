@@ -257,5 +257,14 @@ namespace AntiGitLibrary.Resources {
                 return ResourceManager.GetString("Warning5", resourceCulture);
             }
         }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to I file locali sono stati eliminati mentre questa app era disattivata, questo non è consentito e verranno ripristinati!.
+        /// </summary>
+        public static string Warning6 {
+            get {
+                return ResourceManager.GetString("Warning6", resourceCulture);
+            }
+        }
     }
 }

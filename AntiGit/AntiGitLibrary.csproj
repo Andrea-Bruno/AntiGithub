@@ -2,7 +2,8 @@
 
   <PropertyGroup>
     <TargetFramework>netstandard2.0</TargetFramework>
-    <Configurations>Debug;Release;DebugMac;ReleaseMac</Configurations>
+    <Configurations>Debug;Release;DebugMac;ReleaseMac;Test</Configurations>
+    <NeutralLanguage>en</NeutralLanguage>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='ReleaseMac|AnyCPU'">
@@ -20,6 +21,11 @@
     <Optimize>false</Optimize>
   </PropertyGroup>
 
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Test|AnyCPU'">
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <Optimize>false</Optimize>
+  </PropertyGroup>
+
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
     <DefineConstants />
   </PropertyGroup>
@@ -30,21 +36,21 @@
       <AutoGen>True</AutoGen>
       <DependentUpon>Dictionary.resx</DependentUpon>
     </Compile>
-    <Compile Update="Resources\Dictionary_it.Designer.cs">
+    <Compile Update="Resources\Dictionary.it.Designer.cs">
       <DesignTime>True</DesignTime>
       <AutoGen>True</AutoGen>
-      <DependentUpon>Dictionary_it.resx</DependentUpon>
+      <DependentUpon>Dictionary.it.resx</DependentUpon>
     </Compile>
   </ItemGroup>
 
   <ItemGroup>
     <EmbeddedResource Update="Resources\Dictionary.resx">
-      <Generator>ResXFileCodeGenerator</Generator>
+      <Generator>PublicResXFileCodeGenerator</Generator>
       <LastGenOutput>Dictionary.Designer.cs</LastGenOutput>
     </EmbeddedResource>
-    <EmbeddedResource Update="Resources\Dictionary_it.resx">
+    <EmbeddedResource Update="Resources\Dictionary.it.resx">
       <Generator>PublicResXFileCodeGenerator</Generator>
-      <LastGenOutput>Dictionary_it.Designer.cs</LastGenOutput>
+      <LastGenOutput>Dictionary.it.Designer.cs</LastGenOutput>
     </EmbeddedResource>
   </ItemGroup>
 
