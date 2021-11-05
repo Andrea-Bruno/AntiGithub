@@ -151,6 +151,15 @@ namespace AntiGitLibrary.Resources {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Instance already running.
+        /// </summary>
+        public static string InstanceAlreadyRunning {
+            get {
+                return ResourceManager.GetString("InstanceAlreadyRunning", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to To restore the backup you need to copy the desired version where you prefer, via the command line (copy and paste does not work).
         /// </summary>
         public static string Instruction1 {

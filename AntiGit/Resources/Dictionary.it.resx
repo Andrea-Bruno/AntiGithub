@@ -186,4 +186,7 @@
   <data name="Warning6" xml:space="preserve">
     <value>I file locali sono stati eliminati mentre questa app era disattivata, questo non è consentito e verranno ripristinati!</value>
   </data>
+  <data name="InstanceAlreadyRunning" xml:space="preserve">
+    <value>Istanza già in esecuzione </value>
+  </data>
 </root>

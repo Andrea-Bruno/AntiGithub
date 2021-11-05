@@ -186,4 +186,7 @@
   <data name="Warning6" xml:space="preserve">
     <value>Local files have been deleted while this app was turned off, this is not allowed and they will be restored!</value>
   </data>
+  <data name="InstanceAlreadyRunning" xml:space="preserve">
+    <value>Instance already running</value>
+  </data>
 </root>

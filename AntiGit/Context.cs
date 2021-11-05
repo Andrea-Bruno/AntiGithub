@@ -47,12 +47,7 @@ namespace AntiGitLibrary
 				}
 			}, null, TimeSpan.Zero, new TimeSpan(1, 0, 0, 0));
 
-			_backupOfTheChange = new Timer(x =>
-			{
-				Backup.Start(SourceDir, TargetDir, false);
-			}, null, -1, -1);
-
-
+			_backupOfTheChange = new Timer(x => Backup.Start(SourceDir, TargetDir, false), null, Timeout.Infinite, Timeout.Infinite);
 			SyncGit();
 		}
 

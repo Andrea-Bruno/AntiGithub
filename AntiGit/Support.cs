@@ -27,7 +27,7 @@ namespace AntiGitLibrary
         private static DateTime RoundDate(DateTime dt)
         {
             // FAT / VFAT has a maximum resolution of 2s
-            // NTFS has a maximum resolution of 100 ns
+            // NTFS has a maximum resolution of 100 ms
 #if MAC
 			var add = 0;
 #else
@@ -35,11 +35,15 @@ namespace AntiGitLibrary
 #endif
             return new DateTime(dt.Year, dt.Month, dt.Day, dt.Hour, dt.Minute, dt.Second + add);
         }
-
+        private static readonly string[] ExcludeFiles = { };
         private static readonly string[] ExcludeDir = { "bin", "obj", ".vs", "packages", "apppackages" };
-        internal static bool ToExclude(string dirName)
+        internal static bool DirToExclude(string dirName)
         {
             return dirName.StartsWith(".") || ExcludeDir.Contains(dirName.ToLower());
+        }
+        internal static bool FileToExclude(string fileName)
+        {
+            return fileName.StartsWith(".") || ExcludeFiles.Contains(fileName.ToLower());
         }
 
         /// <summary>

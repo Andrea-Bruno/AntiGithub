@@ -54,24 +54,24 @@ namespace AntiGitLibrary
                         try
                         {
 #endif
-                            if (!IsSourceAndGitCompatible(new DirectoryInfo(sourcePath), new DirectoryInfo(gitPath)))
-                            {
-                                Context.Alert(Resources.Dictionary.Warning1);
-                                return;
-                            }
-                            var toBeDeleted = new List<string>();
-                            var skip = false;
-                            localFiles = null;
-                            SyncGit(ref oldestFile, ref someFilesHaveChanged, Scan.LocalDrive, sourcePath, gitPath, ref skip, ref toBeDeleted, ref localFiles);
-                            SaveMemoryFile(Scan.RemoteDrive, remoteFiles, gitPath);
-                            DeleteRemovedFiles(toBeDeleted, Scan.LocalDrive, sourcePath, gitPath);
-                            toBeDeleted = new List<string>();
-                            skip = false;
-                            remoteFiles = null;
-                            SyncGit(ref oldestFile, ref someFilesHaveChanged, Scan.RemoteDrive, gitPath, sourcePath, ref skip, ref toBeDeleted, ref remoteFiles);
-                            SaveMemoryFile(Scan.LocalDrive, localFiles, sourcePath);
-                            DeleteRemovedFiles(toBeDeleted, Scan.RemoteDrive, gitPath, sourcePath);
-                            FullSyncCycle++;
+                        if (!IsSourceAndGitCompatible(new DirectoryInfo(sourcePath), new DirectoryInfo(gitPath)))
+                        {
+                            Context.Alert(Resources.Dictionary.Warning1);
+                            return;
+                        }
+                        var toBeDeleted = new List<string>();
+                        var skip = false;
+                        localFiles = null;
+                        SyncGit(ref oldestFile, ref someFilesHaveChanged, Scan.LocalDrive, sourcePath, gitPath, ref skip, ref toBeDeleted, ref localFiles);
+                        SaveMemoryFile(Scan.RemoteDrive, remoteFiles, gitPath);
+                        DeleteRemovedFiles(toBeDeleted, Scan.LocalDrive, sourcePath, gitPath);
+                        toBeDeleted = new List<string>();
+                        skip = false;
+                        remoteFiles = null;
+                        SyncGit(ref oldestFile, ref someFilesHaveChanged, Scan.RemoteDrive, gitPath, sourcePath, ref skip, ref toBeDeleted, ref remoteFiles);
+                        SaveMemoryFile(Scan.LocalDrive, localFiles, sourcePath);
+                        DeleteRemovedFiles(toBeDeleted, Scan.RemoteDrive, gitPath, sourcePath);
+                        FullSyncCycle++;
 #if RELEASE
                         }
                         catch (Exception e)
@@ -192,7 +192,7 @@ namespace AntiGitLibrary
                     dir.Delete(true);
                 }
                 catch (Exception ex) { Debug.WriteLine(ex.Message); }
-            if (Support.ToExclude(dir.Name) || dir.Attributes.HasFlag(FileAttributes.Hidden))
+            if (Support.DirToExclude(dir.Name) || dir.Attributes.HasFlag(FileAttributes.Hidden))
             {
                 if (!dir.Exists)
                     skip = true;
@@ -247,7 +247,7 @@ namespace AntiGitLibrary
                         catch (Exception ex) { Debug.WriteLine(ex.Message); }
 
 
-                    if (file.Attributes.HasFlag(FileAttributes.Hidden) || file.Name.StartsWith("."))
+                    if (file.Attributes.HasFlag(FileAttributes.Hidden) || Support.FileToExclude(file.Name))
                         continue;
                     newMemoryFile.Add(file.FullName);
                     var targetFile = Path.Combine(targetDirName, file.Name);
