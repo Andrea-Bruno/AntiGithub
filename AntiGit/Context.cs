@@ -9,23 +9,24 @@ using System.IO;
 using System.Net.Http;
 using System.Threading;
 using System.Threading.Tasks;
+using BackupLibrary;
 #if !MAC
 using System.Runtime.InteropServices;
 #endif
-
+using DataRedundancy;
 namespace AntiGitLibrary
 {
 	public class Context
 	{
-		public readonly string Info = Resources.Dictionary.Info;
+		public readonly string Info = DataRedundancy.Resources.Dictionary.Info;
 		private readonly Backup Backup;
 		private readonly Git Git;
 
 		public Context(Action<string> alert = null)
 		{
 			WriteOutput(Info);
-			Backup = new Backup(this);
-			Git = new Git(this);
+			Backup = new Backup();
+			Git = new Git(Alert, BackupOfTheChange);
 			_alert = alert;
 #if TEST
 			_sourceDir = @"c:\test";
@@ -46,8 +47,13 @@ namespace AntiGitLibrary
 					StartBackup();
 				}
 			}, null, TimeSpan.Zero, new TimeSpan(1, 0, 0, 0));
-
-			_backupOfTheChange = new Timer(x => Backup.Start(SourceDir, TargetDir, false), null, Timeout.Infinite, Timeout.Infinite);
+            if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+            {
+                var readmeFile = Path.Combine(TargetDir, "readme.txt");
+                if (!File.Exists(readmeFile))
+                    File.WriteAllText(readmeFile, DataRedundancy.Resources.Dictionary.Instruction1);
+            }
+            _backupOfTheChange = new Timer(x => Backup.Start(SourceDir, TargetDir, false), null, Timeout.Infinite, Timeout.Infinite);
 			SyncGit();
 		}
 
@@ -74,21 +80,21 @@ namespace AntiGitLibrary
 			{
 				if (Math.Abs((DateTime.UtcNow - currentDateTime).TotalSeconds) >= 3)
 				{
-					WriteOutput(Resources.Dictionary.TimeIncorrect + " " + currentDateTime.ToLocalTime().ToString("HH mm ss") + " " + Resources.Dictionary.ComputerClockIs + " " + DateTime.Now.ToString("HH mm ss"));
+					WriteOutput(DataRedundancy.Resources.Dictionary.TimeIncorrect + " " + currentDateTime.ToLocalTime().ToString("HH mm ss") + " " + DataRedundancy.Resources.Dictionary.ComputerClockIs + " " + DateTime.Now.ToString("HH mm ss"));
 					if (SetDateTime(currentDateTime))
 					{
-						WriteOutput(Resources.Dictionary.ClockFixed);
+						WriteOutput(DataRedundancy.Resources.Dictionary.ClockFixed);
 					}
 					else
 					{
-						WriteOutput(Resources.Dictionary.PleaseAdjustClock);
-						RequestAdministrationMode(Resources.Dictionary.Warning4);
+						WriteOutput(DataRedundancy.Resources.Dictionary.PleaseAdjustClock);
+						RequestAdministrationMode(DataRedundancy.Resources.Dictionary.Warning4);
 					}
 				}
 			}
 			else
 			{
-				WriteOutput(Resources.Dictionary.TimeNotCheckedOnline);
+				WriteOutput(DataRedundancy.Resources.Dictionary.TimeNotCheckedOnline);
 			}
 		}
 
@@ -181,13 +187,18 @@ namespace AntiGitLibrary
 		{
 			if (!string.IsNullOrEmpty(_gitDir))
 			{
+				string alert = null;
 				if (!Directory.Exists(_gitDir))
-					Alert("Git " + Resources.Dictionary.DirectoryNotFound);
+					Alert("Git " + DataRedundancy.Resources.Dictionary.DirectoryNotFound);
 				else if (!Directory.Exists(_sourceDir))
-					Alert("Source " + Resources.Dictionary.DirectoryNotFound);
-				else if (CheckSourceAndGitDirectory())
+					Alert("Source " + DataRedundancy.Resources.Dictionary.DirectoryNotFound);
+				else if (Git.CheckSourceAndGitDirectory(_sourceDir, _gitDir, out alert))
 				{
-					Git.FullSyncGit(_sourceDir, _gitDir);
+					Git.StartSync(_sourceDir, _gitDir);
+				}
+				if (alert != null)
+				{
+					Alert(alert);
 				}
 			}
 		}
@@ -212,7 +223,6 @@ namespace AntiGitLibrary
 			}
 			return null;
 		}
-
 
 		private string _sourceDir;
 		public string SourceDir
@@ -250,7 +260,7 @@ namespace AntiGitLibrary
 					_targetDir = value;
 					SetValue("target", value);
 					if (!string.IsNullOrEmpty(_targetDir) && !Directory.Exists(_targetDir))
-						WriteOutput("Target " + Resources.Dictionary.DirectoryNotFound);
+						WriteOutput("Target " + DataRedundancy.Resources.Dictionary.DirectoryNotFound);
 				}
 			}
 
@@ -292,7 +302,9 @@ namespace AntiGitLibrary
 			{
 				try
 				{
-					CheckSourceAndGitDirectory();
+					Git.CheckSourceAndGitDirectory(_sourceDir, _gitDir, out string alert);
+					if (alert != null)
+						Alert(alert);
 					var source = new DirectoryInfo(_sourceDir);
 					var git = new DirectoryInfo(_gitDir);
 					var sourceCount = source.GetFileSystemInfos().Length;
@@ -301,7 +313,7 @@ namespace AntiGitLibrary
 					{
 						//if (!IsSourceAndGitCompatible(source, git)) // This line has been removed to prevent a merge between different versions: If you use Context it is good practice that the first programmer synchronizes their version on git, and everyone else creates their own version locally by cloning the Git one. This software does it automatically!
 						//{
-						Alert(Resources.Dictionary.Error1);
+						Alert(DataRedundancy.Resources.Dictionary.Error1);
 						return false;
 						//}
 					}
@@ -314,47 +326,15 @@ namespace AntiGitLibrary
 			}
 			return true;
 		}
-		private bool CheckSourceAndGitDirectory()
-		{
-			try
-			{
-				var source = new DirectoryInfo(_sourceDir);
-				if (!Support.IsLocalPath(source))
-				{
-					Alert(Resources.Dictionary.Error3);
-					return false;
-				}
-				if (Support.IsLink(source))
-				{
-					Alert(Resources.Dictionary.Error5 + ":" + Environment.NewLine + source.FullName);
-					return false;
-				}
-				var git = new DirectoryInfo(_gitDir);
-				if (Support.IsLink(git))
-				{
-					Alert(Resources.Dictionary.Error5 + ":" + Environment.NewLine + git.FullName);
-					return false;
-				}
-				if (Support.IsFtpPath(git))
-				{
-					Alert(Resources.Dictionary.Error4);
-					return false;
-				}
-			}
-			catch (Exception ex)
-			{
-				Alert(ex.Message);
-				return false;
-			}
-			return true;
-		}
 
-		internal static void Alert(string message, bool waitClick = false)
+        //internal static void Alert(string message, bool waitClick = false)
+        internal static void Alert(string message)
 		{
 			Console.WriteLine(message);
-			if (waitClick)
-				_alert?.Invoke(message);
-			else if (_alert != null)
+			//if (waitClick)
+			//	_alert?.Invoke(message);
+			// else 
+			if (_alert != null)
 				Task.Run(() => _alert?.Invoke(message));
 		}
 		private static Action<string> _alert;
@@ -383,7 +363,7 @@ namespace AntiGitLibrary
 		internal static void RequestAdministrationMode(string descriprion)
 		{
 			if (_requestAdmin) return;
-			Alert(Resources.Dictionary.Error2 + Environment.NewLine + descriprion);
+			Alert(DataRedundancy.Resources.Dictionary.Error2 + Environment.NewLine + descriprion);
 			_requestAdmin = true;
 		}
 	}

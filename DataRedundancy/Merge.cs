@@ -5,7 +5,7 @@ using System.Linq;
 #if !DEBUG
 using System.Threading.Tasks;
 #endif
-namespace AntiGitLibrary
+namespace DataRedundancy
 {
 	static class Merge
 	{
@@ -23,7 +23,7 @@ namespace AntiGitLibrary
 		}
 #endif
 
-		public static void ExecuteMerge(FileInfo from, FileInfo to, FileInfo visualStudioBackupFile = null, FileInfo outputFile = null)
+		public static void ExecuteMerge(FileInfo from, FileInfo to, Action<string> alert, FileInfo visualStudioBackupFile = null, FileInfo outputFile = null)
 		{
 			var local = visualStudioBackupFile ?? to;
 			var listFrom = LoadTextFiles(from);
@@ -160,10 +160,11 @@ namespace AntiGitLibrary
 			{
 				// If the attempt fails it will be updated to the next round!
 				if (Support.IsDiskFull(e))
-					Context.Alert(e.Message, true);
+					alert?.Invoke(e.Message);
 			}
 		}
-		private enum Turn
+
+        private enum Turn
 		{
 			From,
 			To,
@@ -454,7 +455,7 @@ namespace AntiGitLibrary
 		{
 			var fileLines = File.ReadAllLines(file.FullName);
 			var listFile = new List<Line>();
-			fileLines.ToList().ForEach(x => listFile.Add(new Line { Text = x, Hash = Support.GetHashCode(x, true) }));
+			fileLines.ToList().ForEach(x => listFile.Add(new Line { Text = x, Hash = GetHashCode(x, true) }));
 			return listFile;
 		}
 
@@ -463,9 +464,28 @@ namespace AntiGitLibrary
 			public string Text;
 			public ulong Hash;
 		}
-	}
+        public static ulong GetHashCode(string input, bool considerSpaces = false)
+        {
+            if (!considerSpaces)
+            {
+                input = input.Replace("\t", "");
+                input = input.Replace(" ", "");
+            }
+            input = input.Replace("\r", "");
+            input = input.Replace("\n", "");
+            const ulong value = 3074457345618258791ul;
+            var hashedValue = value;
+            foreach (var t in input)
+            {
+                hashedValue += t;
+                hashedValue *= value;
+            }
+            return hashedValue;
+        }
 
-	struct HashCheck
+    }
+
+    struct HashCheck
 	{
 		public ulong Hash;
 		public bool Present;

@@ -14,7 +14,7 @@ namespace AntiGitUi
 		{
 			if (Process.GetProcessesByName(Process.GetCurrentProcess().ProcessName).Length > 1)
 			{
-				MessageBox.Show(AntiGitLibrary.Resources.Dictionary.InstanceAlreadyRunning);
+				MessageBox.Show("Instance already running");
 				return;
 			}
 			Application.EnableVisualStyles();

@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <TargetFramework>netstandard2.0</TargetFramework>
@@ -31,27 +31,13 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <Compile Update="Resources\Dictionary.Designer.cs">
-      <DesignTime>True</DesignTime>
-      <AutoGen>True</AutoGen>
-      <DependentUpon>Dictionary.resx</DependentUpon>
-    </Compile>
-    <Compile Update="Resources\Dictionary.it.Designer.cs">
-      <DesignTime>True</DesignTime>
-      <AutoGen>True</AutoGen>
-      <DependentUpon>Dictionary.it.resx</DependentUpon>
-    </Compile>
+    <Compile Remove="Backup.cs" />
+    <Compile Remove="Support.cs" />
   </ItemGroup>
 
   <ItemGroup>
-    <EmbeddedResource Update="Resources\Dictionary.resx">
-      <Generator>PublicResXFileCodeGenerator</Generator>
-      <LastGenOutput>Dictionary.Designer.cs</LastGenOutput>
-    </EmbeddedResource>
-    <EmbeddedResource Update="Resources\Dictionary.it.resx">
-      <Generator>PublicResXFileCodeGenerator</Generator>
-      <LastGenOutput>Dictionary.it.Designer.cs</LastGenOutput>
-    </EmbeddedResource>
+    <ProjectReference Include="..\Backup\BackupLibrary.csproj" />
+    <ProjectReference Include="..\DataRedundancy\DataRedundancy.csproj" />
   </ItemGroup>
 
 </Project>

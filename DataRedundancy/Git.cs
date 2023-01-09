@@ -6,13 +6,24 @@ using System.IO;
 using System.Linq;
 using System.Threading;
 
-namespace AntiGitLibrary
+namespace DataRedundancy
 {
-    class Git
+    /// <summary>
+    /// Redundant data sync unit. It allows the synchronization of two paths of one type, both local and on the network
+    /// </summary>
+    public class Git
     {
-        public Git(Context context)
+        /// <summary>
+        /// Instance initializer
+        /// </summary>
+        /// <param name="alert">Event that is invoked when there are warnings</param>
+        /// <param name="onDataChanged">Event that is called when a data change is intercepted</param>
+        public Git(Action<string> alert, Action onDataChanged = null)
         {
-            Context = context;
+            if (!AppDir.Exists)
+                AppDir.Create();
+            Alert = alert;
+            OnDataChanged = onDataChanged;
 #if DEBUG
             //var x1 = Merge.LoadTextFiles(new FileInfo(@"C:\test\text1.txt"));
             //Merge.ExecuteMerge(new FileInfo(@"C:\test\t1.txt"), new FileInfo(@"C:\test\t2.txt"), null, new FileInfo(@"C:\test\Result.txt"));
@@ -20,8 +31,8 @@ namespace AntiGitLibrary
             //Debugger.Break();
 #endif
         }
-
-        private readonly Context Context;
+		internal static readonly DirectoryInfo AppDir = new DirectoryInfo(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData) + @"\Context");
+        private readonly Action<string> Alert;
         private Thread gitTask;
         private int FullSyncCycle;
 #if DEBUG
@@ -29,7 +40,68 @@ namespace AntiGitLibrary
 #else
         const int SleepMs = 60000;
 #endif
-        internal void FullSyncGit(string sourcePath, string gitPath)
+        /// <summary>
+        /// If possible it suggests a directory to store data redundantly, otherwise it returns null
+        /// </summary>
+        /// <returns></returns>
+        public static string GetDefaultGitDirectory()
+        {
+            try
+            {
+                string result = null;
+                var drives = DriveInfo.GetDrives();
+                foreach (var drive in drives.Reverse())
+                {
+                    if (drive.IsReady && drive.TotalSize >= 274877906944 && drive != drives.First()) // >= 256 gb
+                    {
+                        result = Path.Combine(drive.Name, AppDomain.CurrentDomain.FriendlyName);
+                        break;
+                    }
+                }
+                return result;
+            }
+            catch (Exception)
+            {
+            }
+            return null;
+        }
+
+        public static bool CheckSourceAndGitDirectory(string sourceDir, string gitDir, out string alert)
+        {
+            try
+            {
+                var source = new DirectoryInfo(sourceDir);
+                if (!Support.IsLocalPath(source))
+                {
+                    alert = Resources.Dictionary.Error3;
+                    return false;
+                }
+                if (Support.IsLink(source))
+                {
+                    alert = (Resources.Dictionary.Error5 + ":" + Environment.NewLine + source.FullName);
+                    return false;
+                }
+                var git = new DirectoryInfo(gitDir);
+                if (Support.IsLink(git))
+                {
+                    alert = (Resources.Dictionary.Error5 + ":" + Environment.NewLine + git.FullName);
+                    return false;
+                }
+                if (Support.IsFtpPath(git))
+                {
+                    alert = (Resources.Dictionary.Error4);
+                    return false;
+                }
+            }
+            catch (Exception ex)
+            {
+                alert = ex.Message;
+                return false;
+            }
+            alert = null;
+            return true;
+        }
+        public void StartSync(string sourcePath, string gitPath)
         {
             gitTask = new Thread(() =>
             {
@@ -56,7 +128,7 @@ namespace AntiGitLibrary
 #endif
                         if (!IsSourceAndGitCompatible(new DirectoryInfo(sourcePath), new DirectoryInfo(gitPath)))
                         {
-                            Context.Alert(Resources.Dictionary.Warning1);
+                            Alert?.Invoke(Resources.Dictionary.Warning1);
                             return;
                         }
                         var toBeDeleted = new List<string>();
@@ -81,11 +153,11 @@ namespace AntiGitLibrary
                             {
                                 if (e.HResult == -2147024832) // Network no longer available
                                 {
-                                    Context.Alert(e.Message);
+                                    Alert?.Invoke(e.Message);
                                 }
                                 else if (e.HResult == -2147024837) // An unexpected network error occurred
                                 {
-                                    Context.Alert(e.Message);
+                                    Alert?.Invoke(e.Message);
                                 }
                             }
                             Debug.Write(e.Message);
@@ -95,7 +167,7 @@ namespace AntiGitLibrary
 #endif
                         if (someFilesHaveChanged)
                         {
-                            Context.BackupOfTheChange();
+                            OnDataChanged?.Invoke();
                         }
 #if RELEASE
                         // If I don't see any recent changes, loosen the monitoring of the files so as not to stress the disk
@@ -153,6 +225,11 @@ namespace AntiGitLibrary
             }
             return true;
         }
+
+        /// <summary>
+        /// Event that is called when a data change is intercepted
+        /// </summary>
+        private Action OnDataChanged;
 
 
         public void StopSyncGit()
@@ -220,7 +297,7 @@ namespace AntiGitLibrary
                         {
                             Directory.CreateDirectory(targetDirName);
                         }
-                        catch (Exception e) { Context.WriteOutput(e.Message); }
+                        catch (Exception e) { Console.WriteLine(e.Message); }
                     }
                 }
                 else
@@ -241,7 +318,6 @@ namespace AntiGitLibrary
                     if (scan == Scan.RemoteDrive && file.Attributes.HasFlag(FileAttributes.Hidden))
                         try
                         {
-                            Debugger.Break();
                             file.Delete();
                         }
                         catch (Exception ex) { Debug.WriteLine(ex.Message); }
@@ -253,8 +329,8 @@ namespace AntiGitLibrary
                     var targetFile = Path.Combine(targetDirName, file.Name);
                     var target = targetFiles?.ToList().Find(x => x.Name == targetFile) ?? new FileInfo(targetFile);
                     var localFile = scan == Scan.LocalDrive ? file : target;
-                    file = Support.WaitFileUnlocked(file);
-                    target = Support.WaitFileUnlocked(target);
+                    file = Support.WaitFileUnlocked(file, Alert);
+                    target = Support.WaitFileUnlocked(target, Alert);
 
                     if (file.Exists && file.LastWriteTimeUtc > returnOldestFile)
                         returnOldestFile = file.LastWriteTimeUtc;
@@ -296,37 +372,51 @@ namespace AntiGitLibrary
                             {
                                 someFilesHaveChanged = true;
                                 // Check if this file exists in the visual studio backup, If yes, then a change is in progress on the local computer!
-                                var visualStudioRecoveryFile = (copy == CopyType.CopyFromRemote && compilationTime != null) ? FindVisualStudioRecoveryFile(to) : null; //NOTE: compilationTime != null is the file is a visual studio file
+                                var visualStudioRecoveryFile = (copy == CopyType.CopyFromRemote && compilationTime != null) ? FindVisualStudioRecoveryFile(to) : null; //NOTE: compilationTime != null is the file is a visual studio file                            
                                 if (copy == CopyType.CopyFromRemote && IsTextFiles(from) && (visualStudioRecoveryFile != null || MyPendingSync.Contains(to)))
                                 {
-                                    Merge.ExecuteMerge(from, to, visualStudioRecoveryFile);
+                                    Merge.ExecuteMerge(from, to, Alert, visualStudioRecoveryFile);
                                 }
                                 else
                                 {
                                     var attempt = 0;
                                     do
                                     {
-                                        try
-                                        {
-                                            if (!to.Directory.Exists)
-                                                to.Directory.Create();
-                                            File.Copy(from.FullName, to.FullName, true);
-                                            attempt = 0;
-                                        }
-                                        catch (Exception e)
+                                        void showError(Exception e, string path)
                                         {
                                             attempt++;
                                             //if (e.HResult == -2147024864) // File already opened by another task
                                             if (attempt == 10)
                                             {
-                                                Context.Alert(e.Message + " " + to.FullName);
+                                                if (e.HResult == -2147023779)
+                                                    Alert?.Invoke(e.Message + " " + path + Environment.NewLine + Resources.Dictionary.Suggest2);
+                                                else
+                                                    Alert?.Invoke(e.Message + " " + path);
                                             }
                                             Thread.Sleep(1000);
                                             Debugger.Break();
                                         }
+                                        try
+                                        {
+                                            if (!to.Directory.Exists)
+                                                to.Directory.Create();
+                                            try
+                                            {
+                                                File.Copy(from.FullName, to.FullName, true);
+                                                attempt = 0;
+
+                                            }
+                                            catch (Exception e)
+                                            {
+                                                showError(e, to.FullName);
+                                            }
+                                        }
+                                        catch (Exception e)
+                                        {
+                                            showError(e, to.Directory.FullName);
+                                        }
+
                                     } while (attempt != 0);
-
-
 #if MAC
 								    File.SetCreationTimeUtc(to.FullName, from.CreationTimeUtc); // bug: If I don't change this parameter the next command has no effect!
 								    File.SetLastWriteTimeUtc(to.FullName, from.CreationTimeUtc);
@@ -345,7 +435,7 @@ namespace AntiGitLibrary
                             {
                                 // If the attempt fails it will be updated to the next round!
                                 if (Support.IsDiskFull(e))
-                                    Context.Alert(e.Message, true);
+                                    Alert?.Invoke(e.Message);
                             }
                         }
 
@@ -390,11 +480,11 @@ namespace AntiGitLibrary
                 return;
             if (isStartup && removedFromSource.Count > 0 && scan == Scan.RemoteDrive)
             {
-                Context.Alert(Resources.Dictionary.Warning6 + fileDeleted(), false);
+                Alert?.Invoke(Resources.Dictionary.Warning6 + fileDeleted());
             }
             else if (!isStartup && removedFromSource.Count > maxFileAllowToDeleteInOneTime)
             {
-                Context.Alert(Resources.Dictionary.Warning2 + fileDeleted(), false);
+                Alert?.Invoke(Resources.Dictionary.Warning2 + fileDeleted());
             }
             else
             {
@@ -412,7 +502,7 @@ namespace AntiGitLibrary
                         }
                         catch (Exception e)
                         {
-                            Context.WriteOutput(e.Message);
+                            Console.WriteLine(e.Message);
                         }
                     }
                     else
@@ -432,13 +522,13 @@ namespace AntiGitLibrary
                                     if (!isShow)
                                     {
                                         isShow = true;
-                                        Context.Alert(Resources.Dictionary.Warning5 + Environment.NewLine + item, false);
+                                        Alert?.Invoke(Resources.Dictionary.Warning5 + Environment.NewLine + item);
                                     }
                                 }
                             }
                             catch (Exception e)
                             {
-                                Context.WriteOutput(e.Message);
+                                Console.WriteLine(e.Message);
                             }
                         }
                     }
@@ -483,7 +573,7 @@ namespace AntiGitLibrary
 
                 if (isChanged && !string.IsNullOrEmpty(path))
                 {
-                    var file = Path.Combine(Context.AppDir.FullName, Support.GetHashCode(path) + ".txt");
+                    var file = Path.Combine(AppDir.FullName, Merge.GetHashCode(path) + ".txt");
                     File.WriteAllLines(file, memory.Cast<string>().ToArray());
                 }
             }
@@ -493,7 +583,7 @@ namespace AntiGitLibrary
         {
             if (!string.IsNullOrEmpty(path))
             {
-                var file = Path.Combine(Context.AppDir.FullName, Support.GetHashCode(path) + ".txt");
+                var file = Path.Combine(AppDir.FullName, Merge.GetHashCode(path) + ".txt");
                 if (new FileInfo(file).Exists)
                 {
                     var list = File.ReadAllLines(file);
@@ -597,7 +687,7 @@ namespace AntiGitLibrary
                     if (VisualStudioBackupFile.Count != 0 && !_showVBSuggest)
                     {
                         _showVBSuggest = true;
-                        Context.WriteOutput(Resources.Dictionary.Suggest1);
+                        Console.WriteLine(Resources.Dictionary.Suggest1);
                     }
 
                     //var candidates = vsDir.GetFiles("~AutoRecover." + original.Name + "*", SearchOption.AllDirectories);
@@ -617,7 +707,7 @@ namespace AntiGitLibrary
                 }
                 catch (Exception e)
                 {
-                    Context.WriteOutput(e.Message);
+                    Console.WriteLine(e.Message);
                 }
             }
 #endif
