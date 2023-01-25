@@ -31,7 +31,7 @@ namespace DataRedundancy
             //Debugger.Break();
 #endif
         }
-		internal static readonly DirectoryInfo AppDir = new DirectoryInfo(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData) + @"\Context");
+		internal static readonly DirectoryInfo AppDir = new DirectoryInfo(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData) + nameof(DataRedundancy));
         private readonly Action<string> Alert;
         private Thread gitTask;
         private int FullSyncCycle;
