@@ -25,10 +25,10 @@ namespace AntiGitLibrary
         private readonly Backup Backup;
         private readonly Git Git;
 
-        public Context(Action<string> alert = null, CreateLink createSymbolicLink = null, bool setCurrentDateTime = true)
+        public Context(Action<string> alert = null, bool setCurrentDateTime = true)
         {
             WriteOutput(Info);
-            Backup = new Backup(createSymbolicLink);
+            Backup = new Backup();
 
             Git = new Git(Alert, BackupOfTheChange);
             _alert = alert;
@@ -55,9 +55,9 @@ namespace AntiGitLibrary
         private PathMonitoring Monitoring;
         public void StopSyncGit() => Git.StopSyncGit();
         public bool SyncGitRunning => Git.SyncGitRunning;
-        public Backup.Outcome StartBackup(bool overwriteExisting = false)
+        public string StartBackup(bool overwriteExisting = false)
         {
-            return Backup.Start(SourceDir, TargetDir, Backup.BackupType.Daily, overwriteExisting);
+            return Backup.Start(SourceDir, TargetDir, Backup.BackupType.Daily, overwriteExisting).ToString();
         }
 
         public bool BackupRunning => Backup.BackupRunning != 0;
