@@ -15,6 +15,8 @@ using BackupLibrary;
 using System.Runtime.InteropServices;
 #endif
 using DataRedundancy;
+using static BackupLibrary.Support;
+
 namespace AntiGitLibrary
 {
     public class Context
@@ -23,10 +25,10 @@ namespace AntiGitLibrary
         private readonly Backup Backup;
         private readonly Git Git;
 
-        public Context(Action<string> alert = null, bool setCurrentDateTime = true)
+        public Context(Action<string> alert = null, CreateLink createSymbolicLink = null, bool setCurrentDateTime = true)
         {
             WriteOutput(Info);
-            Backup = new Backup();
+            Backup = new Backup(createSymbolicLink);
 
             Git = new Git(Alert, BackupOfTheChange);
             _alert = alert;
@@ -47,11 +49,6 @@ namespace AntiGitLibrary
             {
                 StartBackup();
             }, null, TimeSpan.Zero, new TimeSpan(1, 0, 0, 0));
-            _backupOfTheChange = new System.Timers.Timer(60000)
-            {
-                AutoReset = false
-            };
-            _backupOfTheChange.Elapsed += (o, e) => Backup.Start(SourceDir, TargetDir, false);
             SyncGit();
             Monitoring = new PathMonitoring(_sourceDir, BackupOfTheChange);
         }
@@ -60,7 +57,7 @@ namespace AntiGitLibrary
         public bool SyncGitRunning => Git.SyncGitRunning;
         public Backup.Outcome StartBackup(bool overwriteExisting = false)
         {
-            return Backup.Start(SourceDir, TargetDir, true, overwriteExisting);
+            return Backup.Start(SourceDir, TargetDir, Backup.BackupType.Daily, overwriteExisting);
         }
 
         public bool BackupRunning => Backup.BackupRunning != 0;
@@ -184,8 +181,7 @@ namespace AntiGitLibrary
 
         internal void BackupOfTheChange()
         {
-            if (!_backupOfTheChange.Enabled)
-                _backupOfTheChange.Start();
+            Backup.Start(SourceDir, TargetDir, Backup.BackupType.OnChange);
         }
 
         private readonly System.Timers.Timer _backupOfTheChange;
@@ -251,11 +247,7 @@ namespace AntiGitLibrary
                     {
                         SyncGit();
                     }
-                    //if (CheckSourceAndGit())
-                    //	setValue("source", value);
-                    //else
-                    //	_sourceDir = null;
-                    Monitoring.Path = SourceDir;
+                    Monitoring.Path = _sourceDir;
                 }
             }
         }
