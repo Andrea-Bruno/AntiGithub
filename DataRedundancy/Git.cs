@@ -31,7 +31,7 @@ namespace DataRedundancy
             //Debugger.Break();
 #endif
         }
-		internal static readonly DirectoryInfo AppDir = new DirectoryInfo(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData) + nameof(DataRedundancy));
+        internal static readonly DirectoryInfo AppDir = new DirectoryInfo(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData) + nameof(DataRedundancy));
         private readonly Action<string> Alert;
         private Thread gitTask;
         private int FullSyncCycle;
@@ -48,13 +48,16 @@ namespace DataRedundancy
         {
             try
             {
+                var drives = DriveInfo.GetDrives().Reverse();
+
+                var currentDrive = drives.FirstOrDefault(x => (x.RootDirectory.FullName.Length > 1 && AppDomain.CurrentDomain.BaseDirectory.StartsWith(x.RootDirectory.FullName)));
+
                 string result = null;
-                var drives = DriveInfo.GetDrives();
-                foreach (var drive in drives.Reverse())
+                foreach (var drive in drives)
                 {
-                    if (drive.IsReady && drive.TotalSize >= 274877906944 && drive != drives.First()) // >= 256 gb
+                    if (drive.IsReady && drive.TotalSize >= 274877906944 && drive.RootDirectory.FullName != currentDrive.RootDirectory.FullName && drive.AvailableFreeSpace != currentDrive.AvailableFreeSpace) // >= 256 gb
                     {
-                        result = Path.Combine(drive.Name, AppDomain.CurrentDomain.FriendlyName);
+                        result = Path.Combine(drive.Name, "redundancy");
                         break;
                     }
                 }
