@@ -118,7 +118,6 @@ namespace DataRedundancy
                 StringCollection localFiles = null;
                 StringCollection remoteFiles = null;
 
-
                 while (!_stopSync)
                 {
                     if (!string.IsNullOrEmpty(sourcePath) && !string.IsNullOrEmpty(gitPath))
