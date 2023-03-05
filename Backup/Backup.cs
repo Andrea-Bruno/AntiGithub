@@ -4,6 +4,7 @@ using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Threading;
+using static BackupLibrary.Backup;
 using static BackupLibrary.Support;
 
 namespace BackupLibrary
@@ -17,11 +18,9 @@ namespace BackupLibrary
         public Backup()
         {
         }
-        private string _sourceDir;
-        private string _targetDir;
-        private PathMonitoring PathMonitoring;
         public DateTime LastBackup { get; private set; }
-        private Thread BackupThread;
+        private Thread BackupThreadDaily;
+        private Thread BackupThreadOnChange;
         internal bool StopBackup = false;
         public int BackupRunning { get; private set; }
         public delegate void AllertNotification(string description, bool important);
@@ -38,7 +37,8 @@ namespace BackupLibrary
         {
             if (!overwriteDailyBackup && backupType == BackupType.Daily && new DateTime(LastBackup.Year, LastBackup.Month, LastBackup.Day) == new DateTime(DateTime.UtcNow.Year, DateTime.UtcNow.Month, DateTime.UtcNow.Day))
                 return Backup.Outcome.AlreadyDone;
-            if (BackupThread == null || !BackupThread.IsAlive)
+            var BackupThread = backupType == BackupType.Daily? BackupThreadDaily : BackupThreadOnChange;
+            if (BackupThread == null || !BackupThread.IsAlive) // Prevents the backup from running if it is already in progress
             {
                 if (!string.IsNullOrEmpty(sourceDir) && !string.IsNullOrEmpty(targetDir))
                 {
@@ -102,16 +102,14 @@ namespace BackupLibrary
                             var yesterday = new DirectoryInfo(Path.Combine(targetDir, "yesterday"));
                             if (yesterday.Exists && yesterday.CreationTime.DayOfYear != DateTime.Now.AddDays(-1).DayOfYear)
                             {
-                                yesterday.Delete(true);
+                                ForceDeleteDirectory(yesterday);
                             }
                             var todayInfo = new DirectoryInfo(Path.Combine(targetDir, "today"));
                             if (todayInfo.Exists && todayInfo.CreationTime.DayOfYear != DateTime.Now.DayOfYear)
                             {
                                 yesterday = new DirectoryInfo(Path.Combine(targetDir, "yesterday"));
-                                if (yesterday.Exists)
-                                    yesterday.Delete(true);
+                                ForceDeleteDirectory(yesterday);
                                 todayInfo.MoveTo(yesterday.FullName);
-
                             }
                             todayInfo = new DirectoryInfo(Path.Combine(targetDir, "today"));
                             if (!todayInfo.Exists)
@@ -120,28 +118,37 @@ namespace BackupLibrary
                             }
                             target = todayInfo;
                         }
-
-                        DirectoryInfo laseBackupDir = null;
-                        foreach (var dir in target.GetDirectories())
-                        {
-                            if (dir.FullName != targetPath && dir.Name.Split().Length == (backupType == BackupType.Daily ? 3 : 2))
-                            {
-                                if (laseBackupDir == null || dir.CreationTimeUtc >= laseBackupDir.CreationTimeUtc)
-                                    laseBackupDir = dir;
-                            }
-                        }
-
-                        var lastTargetPath = laseBackupDir?.FullName;
-
+                        DirectoryInfo laseBackupDirectoty = LastBackupDirectory(target, targetPath, backupType);
+                        var lastTargetPath = laseBackupDirectoty?.FullName;
                         ExecuteBackup(sourceDir, targetPath, lastTargetPath, new List<FileOperation>());
                         BackupRunning--;
                     })
                     { Priority = ThreadPriority.Lowest };
+                    BackupThread.Name = nameof(Backup) + backupType.ToString();
                     BackupThread.Start();
+                    if (backupType == BackupType.Daily)
+                        BackupThreadDaily = BackupThread;
+                    else
+                        BackupThreadOnChange = BackupThread;
                 }
             }
             return Outcome.Successful;
         }
+
+        public static DirectoryInfo LastBackupDirectory(DirectoryInfo target, string targetPath, BackupType backupType)
+        {
+            DirectoryInfo laseBackupDir = null;
+            foreach (var dir in target.GetDirectories())
+            {
+                if (dir.FullName != targetPath && dir.Name.Split().Length == (backupType == BackupType.Daily ? 3 : 2))
+                {
+                    if (laseBackupDir == null || dir.CreationTimeUtc >= laseBackupDir.CreationTimeUtc)
+                        laseBackupDir = dir;
+                }
+            }
+            return laseBackupDir;
+        }
+
         public enum Outcome { Successful, SourceNotFound, TargetNotFound, AlreadyDone, Scheduled, AlreadyScheduled };
 
         private bool ExecuteBackup(string sourcePath, string targetPath, string oldTargetPath, List<FileOperation> spooler, string sourceRoot = null)

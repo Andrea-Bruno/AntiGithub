@@ -151,7 +151,7 @@ namespace DataRedundancy.Resources {
         }
         
         /// <summary>
-        ///   Cerca una stringa localizzata simile a Instance already running.
+        ///   Cerca una stringa localizzata simile a Instance already running!.
         /// </summary>
         public static string InstanceAlreadyRunning {
             get {
@@ -223,7 +223,7 @@ namespace DataRedundancy.Resources {
         }
         
         /// <summary>
-        ///   Cerca una stringa localizzata simile a The current time could not be checked online.
+        ///   Cerca una stringa localizzata simile a The current time could not be checked online!.
         /// </summary>
         public static string TimeNotCheckedOnline {
             get {
@@ -250,7 +250,7 @@ namespace DataRedundancy.Resources {
         }
         
         /// <summary>
-        ///   Cerca una stringa localizzata simile a Unable to create symbolic links.
+        ///   Cerca una stringa localizzata simile a Unable to create symbolic links!.
         /// </summary>
         public static string Warning3 {
             get {
@@ -259,7 +259,7 @@ namespace DataRedundancy.Resources {
         }
         
         /// <summary>
-        ///   Cerca una stringa localizzata simile a Unable to synchronize the clock.
+        ///   Cerca una stringa localizzata simile a Unable to synchronize the clock!.
         /// </summary>
         public static string Warning4 {
             get {
@@ -268,7 +268,7 @@ namespace DataRedundancy.Resources {
         }
         
         /// <summary>
-        ///   Cerca una stringa localizzata simile a Only empty directories can be deleted.
+        ///   Cerca una stringa localizzata simile a Only empty directories can be deleted!.
         /// </summary>
         public static string Warning5 {
             get {

@@ -103,5 +103,20 @@ namespace DataRedundancy
         {
             return IsLocalPath(new DirectoryInfo(pathName));
         }
+
+        /// <summary>
+        /// https://stackoverflow.com/questions/611921/how-do-i-delete-a-directory-with-read-only-files-in-c
+        /// </summary>
+        /// <param name="path">Directory to delete</param>
+        internal static void ForceDeleteDirectory(DirectoryInfo directory)
+        {
+            if (directory.Exists)
+            {
+                directory.Attributes = FileAttributes.Normal;
+                foreach (var info in directory.GetFileSystemInfos("*", SearchOption.AllDirectories))
+                    info.Attributes = FileAttributes.Normal;
+                directory.Delete(true);
+            }
+        }
     }
 }

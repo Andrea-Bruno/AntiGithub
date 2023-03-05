@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <root>
   <!-- 
     Microsoft ResX Schema 
@@ -118,78 +118,78 @@
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
   <data name="ClockFixed" xml:space="preserve">
-    <value>I fixed the system clock!</value>
+    <value>¡¡Arreglé el reloj del sistema!</value>
   </data>
   <data name="ComputerClockIs" xml:space="preserve">
-    <value>The computer clock is</value>
+    <value>¡El reloj de la computadora lo es!</value>
   </data>
   <data name="DirectoryNotFound" xml:space="preserve">
-    <value>Directory not found</value>
+    <value>Directorio no encontrado</value>
   </data>
   <data name="Error1" xml:space="preserve">
-    <value>Error: During the first setup Git and Source cannot contain files at the same time: If you want to synchronize this computer with the shared Git, then Git must contain the files and the Source directory must be empty. If you want to create a shared Git, then Git must be empty and Source must contain the files you want to share.</value>
+    <value>Error: Durante la primera configuración, Git y Source no pueden contener archivos al mismo tiempo: Si desea sincronizar este equipo con el Git compartido, Git debe contener los archivos y el directorio Source debe estar vacío. Si desea crear un Git compartido, entonces Git debe estar vacío y Source debe contener los archivos que desea compartir.</value>
   </data>
   <data name="Error2" xml:space="preserve">
-    <value>Error: The application must be run in administrator mode</value>
+    <value>Error: ¡La aplicación debe ejecutarse en modo administrador!</value>
   </data>
   <data name="Error3" xml:space="preserve">
-    <value>The source directory cannot be remote</value>
+    <value>¡El directorio de origen no puede ser remoto!</value>
   </data>
   <data name="Error4" xml:space="preserve">
-    <value>FTP paths are not allowed</value>
+    <value>¡Las rutas FTP no están permitidas!</value>
   </data>
   <data name="Error5" xml:space="preserve">
-    <value>Links to other directories are not allowed</value>
+    <value>¡No se permiten enlaces a otros directorios!</value>
   </data>
   <data name="FileLocked" xml:space="preserve">
-    <value>File permanently locked by a process</value>
+    <value>Archivo bloqueado permanentemente por un proceso!</value>
   </data>
   <data name="Info" xml:space="preserve">
-    <value>NOTE: The SOURCE directory is the one with the files to keep (your projects and your solutions must be here), in the TARGET directory the daily backups will be saved, the GIT directory is a remote directory accessible to all those who work on the same source files, for example, the git directory can correspond to a disk of network or to the address of a pen drive connected to the router, in this directory Context will create a synchronized version of the source in real time.</value>
+    <value>NOTA: El directorio SOURCE es el que tiene los archivos a conservar (sus proyectos y sus soluciones deben estar aquí), en el directorio TARGET se guardarán las copias de seguridad diarias, el directorio GIT es un directorio remoto accesible para todos aquellos que trabajan en los mismos archivos fuente, por ejemplo, el directorio git puede corresponder a un disco de red o a la dirección de un pen drive conectado al router,  en este directorio Context creará una versión sincronizada de la fuente en tiempo real.</value>
   </data>
   <data name="Instruction1" xml:space="preserve">
-    <value>To restore the backup you need to copy the desired version where you prefer, via the command line (copy and paste does not work)</value>
+    <value>Para restaurar la copia de seguridad, debe copiar la versión deseada donde prefiera, a través de la línea de comandos (copiar y pegar no funciona).</value>
   </data>
   <data name="PleaseAdjustClock" xml:space="preserve">
-    <value>"Please adjust the system clock!"</value>
+    <value>"¡Por favor, ajuste el reloj del sistema!"!</value>
   </data>
   <data name="SourceNotFound" xml:space="preserve">
-    <value>Source not found!</value>
+    <value>Código fuente no encontrado!</value>
   </data>
   <data name="Suggest1" xml:space="preserve">
-    <value>Suggest: It is recommended setting Visual Studio Auto Recovery to 1 minute: tools-&gt;Options-&gt;Environment-AutoRecover</value>
+    <value>Sugerencia: Se recomienda configurar Visual Studio Auto Recovery en 1 minuto: tools-&amp;gt;Options-&amp;gt;Environment-AutoRecover!</value>
   </data>
   <data name="TargetNotFound" xml:space="preserve">
-    <value>Target not found!</value>
+    <value>Destino no encontrado!</value>
   </data>
   <data name="TimeIncorrect" xml:space="preserve">
-    <value>The current computer time is incorrect: It is</value>
+    <value>La hora actual de la computadora es incorrecta: lo es</value>
   </data>
   <data name="TimeNotCheckedOnline" xml:space="preserve">
-    <value>The current time could not be checked online!</value>
+    <value>¡La hora actual no se pudo verificar en línea!</value>
   </data>
   <data name="Warning1" xml:space="preserve">
-    <value>Warning: Git sync cannot be started because the source and git directories contain different projects. Check the settings!</value>
+    <value>Advertencia: La sincronización de Git no se puede iniciar porque los directorios de origen y git contienen proyectos diferentes. ¡Comprueba la configuración!</value>
   </data>
   <data name="Warning2" xml:space="preserve">
-    <value>More than one file has been deleted, for security reasons we will not synchronize if more than one file is deleted!</value>
+    <value>Se ha eliminado más de un archivo, por razones de seguridad no sincronizaremos si se elimina más de un archivo!</value>
   </data>
   <data name="Warning3" xml:space="preserve">
-    <value>Unable to create symbolic links!</value>
+    <value>¡No se pueden crear enlaces simbólicos!</value>
   </data>
   <data name="Warning4" xml:space="preserve">
-    <value>Unable to synchronize the clock!</value>
+    <value>¡No se puede sincronizar el reloj!</value>
   </data>
   <data name="Warning5" xml:space="preserve">
-    <value>Only empty directories can be deleted!</value>
+    <value>¡Solo se pueden eliminar directorios vacíos!</value>
   </data>
   <data name="Warning6" xml:space="preserve">
-    <value>Local files have been deleted while this app was turned off, this is not allowed and they will be restored!</value>
+    <value>Los archivos locales se han eliminado mientras esta aplicación estaba apagada, ¡esto no está permitido y se restaurarán!</value>
   </data>
   <data name="InstanceAlreadyRunning" xml:space="preserve">
-    <value>Instance already running!</value>
+    <value>¡La instancia ya se está ejecutando!</value>
   </data>
   <data name="Suggest2" xml:space="preserve">
-    <value>Suggest: to solve the problem it is recommended that you format or repair the drive</value>
+    <value>Sugerencia: para resolver el problema, se recomienda que formatee o repare la unidad.</value>
   </data>
 </root>

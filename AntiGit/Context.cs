@@ -4,18 +4,13 @@
 
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.IO;
 using System.Net.Http;
 using System.Runtime.InteropServices;
 using System.Threading;
 using System.Threading.Tasks;
 using BackupLibrary;
-#if !MAC
-using System.Runtime.InteropServices;
-#endif
 using DataRedundancy;
-using static BackupLibrary.Support;
 
 namespace AntiGitLibrary
 {
@@ -45,18 +40,16 @@ namespace AntiGitLibrary
 #endif
             if (setCurrentDateTime)
                 SetCurrentDateTime();
-            BackupTimer = new Timer(x =>
-            {
-                StartBackup();
-            }, null, TimeSpan.Zero, new TimeSpan(1, 0, 0, 0));
+            BackupTimer = new Timer(x => StartBackup(), null, TimeSpan.FromMinutes(5), TimeSpan.Zero); // set timespan to start the firse backup, the next backups will be one day apart
             SyncGit();
             Monitoring = new PathMonitoring(_sourceDir, BackupOfTheChange);
         }
-        private PathMonitoring Monitoring;
+        private readonly PathMonitoring Monitoring;
         public void StopSyncGit() => Git.StopSyncGit();
         public bool SyncGitRunning => Git.SyncGitRunning;
         public string StartBackup(bool overwriteExisting = false)
         {
+            BackupTimer.Change(TimeSpan.FromDays(1), TimeSpan.Zero); // Next backup after 1 day
             return Backup.Start(SourceDir, TargetDir, Backup.BackupType.Daily, overwriteExisting).ToString();
         }
 
@@ -178,13 +171,13 @@ namespace AntiGitLibrary
                 return null;
             }
         }
-
+        /// <summary>
+        /// Start a backup to save the changes made in the now.
+        /// </summary>
         internal void BackupOfTheChange()
         {
             Backup.Start(SourceDir, TargetDir, Backup.BackupType.OnChange);
         }
-
-        private readonly System.Timers.Timer _backupOfTheChange;
 
         internal static void WriteOutput(string text)
         {
@@ -218,9 +211,13 @@ namespace AntiGitLibrary
                 string result = null;
                 foreach (var drive in DriveInfo.GetDrives())
                 {
-                    if (drive.IsReady)
+                    if (drive.IsReady && drive.DriveType == DriveType.Fixed)
                     {
+#if DEBUG
                         result = Path.Combine(drive.Name, "backup");
+#else
+                        result = Path.Combine(drive.Name, "backupTest");
+#endif
                     }
                 }
                 return result;

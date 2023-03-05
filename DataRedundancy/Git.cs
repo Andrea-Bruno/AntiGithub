@@ -268,7 +268,7 @@ namespace DataRedundancy
                 try
                 {
                     Debugger.Break();
-                    dir.Delete(true);
+                    Support.ForceDeleteDirectory(dir);
                 }
                 catch (Exception ex) { Debug.WriteLine(ex.Message); }
             if (Support.DirToExclude(dir.Name) || dir.Attributes.HasFlag(FileAttributes.Hidden))
@@ -517,7 +517,7 @@ namespace DataRedundancy
                             {
                                 if (isStartup && scan == Scan.LocalDrive || dirInfo.GetFiles().Count() + dirInfo.GetDirectories().Count() == 0)
                                 {
-                                    dirInfo.Delete(true);
+                                    Support.ForceDeleteDirectory(dirInfo);
                                 }
                                 else
                                 {

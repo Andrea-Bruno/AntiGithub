@@ -130,7 +130,7 @@
     <value>Directory non trovata</value>
   </data>
   <data name="TimeNotCheckedOnline" xml:space="preserve">
-    <value>Non è stato possibile controllare l'ora corrente online</value>
+    <value>Non è stato possibile controllare l'ora corrente online!</value>
   </data>
   <data name="Error4" xml:space="preserve">
     <value>Non sono ammessi percorsi FTP</value>
@@ -139,7 +139,7 @@
     <value>Errore: l'applicazione deve essere eseguita in modalità amministratore</value>
   </data>
   <data name="Warning4" xml:space="preserve">
-    <value>Impossibile sincronizzare l'orologio</value>
+    <value>Impossibile sincronizzare l'orologio!</value>
   </data>
   <data name="Instruction1" xml:space="preserve">
     <value>Per ripristinare il backup devi copiare la versione desiderata dove preferisci, tramite la riga di comando (il copia e incolla non funziona)</value>
@@ -169,7 +169,7 @@
     <value>File bloccato in modo permanente da un processo</value>
   </data>
   <data name="Warning3" xml:space="preserve">
-    <value>Impossibile creare collegamenti simbolici</value>
+    <value>Impossibile creare collegamenti simbolici!</value>
   </data>
   <data name="PleaseAdjustClock" xml:space="preserve">
     <value>"Si prega di regolare l'orologio di sistema!"</value>
@@ -181,7 +181,7 @@
     <value>Ho corretto l'orologio di sistema!</value>
   </data>
   <data name="Warning5" xml:space="preserve">
-    <value>È possibile eliminare solo le directory vuote</value>
+    <value>È possibile eliminare solo le directory vuote!</value>
   </data>
   <data name="Warning6" xml:space="preserve">
     <value>I file locali sono stati eliminati mentre questa app era disattivata, questo non è consentito e verranno ripristinati!</value>
