@@ -25,9 +25,10 @@ namespace AntiGitUi
 
             // Set the start position of the form to the center of the screen.
             StartPosition = FormStartPosition.CenterScreen;
-            void Alert(string Message)
+            void Alert(Exception Ex)
             {
-                MessageBox.Show(Message);
+                if (Ex != null)
+                    MessageBox.Show(Ex.Message);
             }
             AntiGithub = new AntiGitLibrary.Context(Alert);
             Source.Text = AntiGithub.SourceDir;

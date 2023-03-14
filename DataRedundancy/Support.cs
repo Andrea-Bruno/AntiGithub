@@ -42,7 +42,7 @@ namespace DataRedundancy
             return false;
         }
 
-        public static FileInfo WaitFileUnlocked(FileInfo file, Action<string> alert)
+        public static FileInfo WaitFileUnlocked(FileInfo file, Action<Exception> alert)
         {
             int attempt = 0;
             bool isLocked;
@@ -54,7 +54,7 @@ namespace DataRedundancy
                     attempt++;
                     if (attempt == 320) // 5 min - Note: It may be that a copy is in progress, or other normal operations use the file, before giving a warning we wait for the normal operations to be finished
                     {
-                        alert?.Invoke("File Locked " + file.FullName);
+                        alert?.Invoke(new Exception("File Locked " + file.FullName));
                     }
                     System.Threading.Thread.Sleep(1000);
                     file = new FileInfo(file.FullName);

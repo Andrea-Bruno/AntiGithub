@@ -4,6 +4,7 @@ using System.Collections.Specialized;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Runtime.InteropServices;
 using System.Threading;
 
 namespace DataRedundancy
@@ -18,7 +19,7 @@ namespace DataRedundancy
         /// </summary>
         /// <param name="alert">Event that is invoked when there are warnings</param>
         /// <param name="onDataChanged">Event that is called when a data change is intercepted</param>
-        public Git(Action<string> alert, Action onDataChanged = null)
+        public Git(Action<Exception> alert, Action onDataChanged = null)
         {
             if (!AppDir.Exists)
                 AppDir.Create();
@@ -32,7 +33,7 @@ namespace DataRedundancy
 #endif
         }
         internal static readonly DirectoryInfo AppDir = new DirectoryInfo(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData) + nameof(DataRedundancy));
-        private readonly Action<string> Alert;
+        private readonly Action<Exception> Alert;
         private Thread gitTask;
         private int FullSyncCycle;
 #if DEBUG
@@ -130,7 +131,7 @@ namespace DataRedundancy
 #endif
                         if (!IsSourceAndGitCompatible(new DirectoryInfo(sourcePath), new DirectoryInfo(gitPath)))
                         {
-                            Alert?.Invoke(Resources.Dictionary.Warning1);
+                            Alert?.Invoke(new Exception(Resources.Dictionary.Warning1));
                             return;
                         }
                         var toBeDeleted = new List<string>();
@@ -155,11 +156,11 @@ namespace DataRedundancy
                             {
                                 if (e.HResult == -2147024832) // Network no longer available
                                 {
-                                    Alert?.Invoke(e.Message);
+                                    Alert?.Invoke(e);
                                 }
                                 else if (e.HResult == -2147024837) // An unexpected network error occurred
                                 {
-                                    Alert?.Invoke(e.Message);
+                                    Alert?.Invoke(e);
                                 }
                             }
                             Debug.Write(e.Message);
@@ -391,9 +392,9 @@ namespace DataRedundancy
                                             if (attempt == 10)
                                             {
                                                 if (e.HResult == -2147023779)
-                                                    Alert?.Invoke(e.Message + " " + path + Environment.NewLine + Resources.Dictionary.Suggest2);
+                                                    Alert?.Invoke(new Exception(e.Message + " " + path + Environment.NewLine + Resources.Dictionary.Suggest2, e));
                                                 else
-                                                    Alert?.Invoke(e.Message + " " + path);
+                                                    Alert?.Invoke(new Exception(e.Message + " " + path, e));
                                             }
                                             Thread.Sleep(1000);
                                             Debugger.Break();
@@ -419,10 +420,12 @@ namespace DataRedundancy
                                         }
 
                                     } while (attempt != 0);
-#if MAC
-								    File.SetCreationTimeUtc(to.FullName, from.CreationTimeUtc); // bug: If I don't change this parameter the next command has no effect!
-								    File.SetLastWriteTimeUtc(to.FullName, from.CreationTimeUtc);
-#endif
+                                    if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+                                    {
+                                        // BUG FIX for MAC
+                                        File.SetCreationTimeUtc(to.FullName, from.CreationTimeUtc); // bug: If I don't change this parameter the next command has no effect!
+                                        File.SetLastWriteTimeUtc(to.FullName, from.CreationTimeUtc);
+                                    }
 #if DEBUG
                                     var verifyFron = new FileInfo(from.FullName);
                                     var verifyTo = new FileInfo(to.FullName);
@@ -437,7 +440,7 @@ namespace DataRedundancy
                             {
                                 // If the attempt fails it will be updated to the next round!
                                 if (Support.IsDiskFull(e))
-                                    Alert?.Invoke(e.Message);
+                                    Alert?.Invoke(new Exception(e.Message));
                             }
                         }
 
@@ -482,11 +485,11 @@ namespace DataRedundancy
                 return;
             if (isStartup && removedFromSource.Count > 0 && scan == Scan.RemoteDrive)
             {
-                Alert?.Invoke(Resources.Dictionary.Warning6 + fileDeleted());
+                Alert?.Invoke(new Exception(Resources.Dictionary.Warning6 + fileDeleted()));
             }
             else if (!isStartup && removedFromSource.Count > maxFileAllowToDeleteInOneTime)
             {
-                Alert?.Invoke(Resources.Dictionary.Warning2 + fileDeleted());
+                Alert?.Invoke(new Exception(Resources.Dictionary.Warning2 + fileDeleted()));
             }
             else
             {
@@ -524,7 +527,7 @@ namespace DataRedundancy
                                     if (!isShow)
                                     {
                                         isShow = true;
-                                        Alert?.Invoke(Resources.Dictionary.Warning5 + Environment.NewLine + item);
+                                        Alert?.Invoke(new Exception(Resources.Dictionary.Warning5 + Environment.NewLine + item));
                                     }
                                 }
                             }

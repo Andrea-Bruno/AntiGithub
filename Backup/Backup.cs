@@ -19,6 +19,8 @@ namespace BackupLibrary
         {
         }
         public DateTime LastBackup { get; private set; }
+        public bool DailyBckupIsRunning => BackupThreadDaily != null && BackupThreadDaily.IsAlive;
+        public bool OnChangeBckupIsRunning => BackupThreadOnChange != null && BackupThreadOnChange.IsAlive;
         private Thread BackupThreadDaily;
         private Thread BackupThreadOnChange;
         internal bool StopBackup = false;
@@ -36,7 +38,7 @@ namespace BackupLibrary
         public Outcome Start(string sourceDir, string targetDir, BackupType backupType = BackupType.Daily, bool overwriteDailyBackup = false)
         {
             if (!overwriteDailyBackup && backupType == BackupType.Daily && new DateTime(LastBackup.Year, LastBackup.Month, LastBackup.Day) == new DateTime(DateTime.UtcNow.Year, DateTime.UtcNow.Month, DateTime.UtcNow.Day))
-                return Backup.Outcome.AlreadyDone;
+                return Outcome.AlreadyDone;
             var BackupThread = backupType == BackupType.Daily? BackupThreadDaily : BackupThreadOnChange;
             if (BackupThread == null || !BackupThread.IsAlive) // Prevents the backup from running if it is already in progress
             {
@@ -166,7 +168,7 @@ namespace BackupLibrary
             try
             {
                 var dir = new DirectoryInfo(sourcePath);
-                if (!Support.DirToExclude(dir.Name) && (dir.Attributes & FileAttributes.Hidden) == 0)
+                if (!DirToExclude(dir.Name) && (dir.Attributes & FileAttributes.Hidden) == 0)
                 {
                     var relativeDirName = sourcePath.Substring(sourceRoot.Length);
                     var targetDirName = targetPath + relativeDirName;
@@ -175,8 +177,8 @@ namespace BackupLibrary
                     foreach (var fileInfo in dir.GetFiles())
                     {
                         var file = fileInfo;
-                        file = Support.WaitFileUnlocked(file);
-                        if (!Support.FileToExclude(file.Name) && (file.Attributes & FileAttributes.Hidden) == 0)
+                        file = WaitFileUnlocked(file);
+                        if (!FileToExclude(file.Name) && (file.Attributes & FileAttributes.Hidden) == 0)
                         {
                             var originalFile = file.FullName;
                             var relativeFileName = originalFile.Substring(sourceRoot.Length);
@@ -223,7 +225,7 @@ namespace BackupLibrary
             }
             catch (Exception e)
             {
-                if (Support.IsDiskFull(e))
+                if (IsDiskFull(e))
                     OnAlert?.Invoke(e.Message, true);
                 //                    Context.Alert(e.Message, true);
                 else
@@ -261,7 +263,7 @@ namespace BackupLibrary
                         if (!Directory.Exists(Param1))
                         {
                             //NOTE: Directories cannot have hardware links
-                            var targetRelativeDir = Support.GetRelativePath(Param1, Param2); // we use the relative position otherwise it gives an error if we rename the directory
+                            var targetRelativeDir = GetRelativePath(Param1, Param2); // we use the relative position otherwise it gives an error if we rename the directory
                             CreateSymbolicLink(Param1, targetRelativeDir);
                             if (_checkedIsAdmin)
                             {
@@ -275,13 +277,13 @@ namespace BackupLibrary
                         }
                         break;
                     case TypeOfOperation.LinkFile:
-                        var targetRelativeFile = Support.GetRelativePath(Param1, Param2);
+                        var targetRelativeFile = GetRelativePath(Param1, Param2);
                         // CreateSymbolicLink(Param1, targetRelativeFile);
                         CreateHardLink(Param1, Param2); // These files from cannot be copied easily, you need to use the terminal command.  Relative path is not supported in Hard Link                                                                          
                         break;
                     case TypeOfOperation.CopyFile:
-                        Support.WaitFileUnlocked(Param1);
-                        Support.WaitFileUnlocked(Param2);
+                        WaitFileUnlocked(Param1);
+                        WaitFileUnlocked(Param2);
                         File.Copy(Param1, Param2, true);
                         break;
                 }
@@ -300,9 +302,9 @@ namespace BackupLibrary
         public static bool FilesAreEqual(string nameFile1, string nameFile2)
         {
             var fileInfo1 = new FileInfo(nameFile1);
-            fileInfo1 = Support.WaitFileUnlocked(fileInfo1);
+            fileInfo1 = WaitFileUnlocked(fileInfo1);
             var fileInfo2 = new FileInfo(nameFile2);
-            fileInfo2 = Support.WaitFileUnlocked(fileInfo2);
+            fileInfo2 = WaitFileUnlocked(fileInfo2);
             if (fileInfo1.Exists != fileInfo2.Exists)
                 return false;
 

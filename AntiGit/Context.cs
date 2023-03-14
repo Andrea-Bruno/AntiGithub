@@ -19,9 +19,11 @@ namespace AntiGitLibrary
         public readonly string Info = DataRedundancy.Resources.Dictionary.Info;
         private readonly Backup Backup;
         private readonly Git Git;
+        private int idContext;
 
-        public Context(Action<string> alert = null, bool setCurrentDateTime = true)
+        public Context(Action<Exception> alert = null, bool setCurrentDateTime = true, int id = 0)
         {
+            idContext = id;
             WriteOutput(Info);
             Backup = new Backup();
 
@@ -32,15 +34,15 @@ namespace AntiGitLibrary
 			_targetDir = "";
 			_gitDir = @"\\share\G\test";
 #else
-            _sourceDir = getValue("source"); // ?? Directory.GetCurrentDirectory();
-            _targetDir = getValue("target"); // ?? Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), "backup");
+            _sourceDir = GetValue("source"); // ?? Directory.GetCurrentDirectory();
+            _targetDir = GetValue("target"); // ?? Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), "backup");
             if (string.IsNullOrEmpty(_targetDir))
                 _targetDir = GetDefaultBackupPosition();
-            _gitDir = getValue("git");
+            _gitDir = GetValue("git");
 #endif
             if (setCurrentDateTime)
                 SetCurrentDateTime();
-            BackupTimer = new Timer(x => StartBackup(), null, TimeSpan.FromMinutes(5), TimeSpan.Zero); // set timespan to start the firse backup, the next backups will be one day apart
+            BackupTimer = new Timer(x => StartBackup(), null, TimeSpan.Zero, TimeSpan.FromMinutes(5)); // set timespan to start the firse backup, the next backups will be one day apart
             SyncGit();
             Monitoring = new PathMonitoring(_sourceDir, BackupOfTheChange);
         }
@@ -49,11 +51,13 @@ namespace AntiGitLibrary
         public bool SyncGitRunning => Git.SyncGitRunning;
         public string StartBackup(bool overwriteExisting = false)
         {
-            BackupTimer.Change(TimeSpan.FromDays(1), TimeSpan.Zero); // Next backup after 1 day
+            BackupTimer.Change(TimeSpan.FromDays(1), TimeSpan.FromDays(1)); // Next backup after 1 day
             return Backup.Start(SourceDir, TargetDir, Backup.BackupType.Daily, overwriteExisting).ToString();
         }
 
         public bool BackupRunning => Backup.BackupRunning != 0;
+        public bool DailyBckupIsRunning => Backup.DailyBckupIsRunning;
+        public bool OnChangeBckupIsRunning => Backup.OnChangeBckupIsRunning;
 
         public struct SystemTime
         {
@@ -190,17 +194,15 @@ namespace AntiGitLibrary
             {
                 string alert = null;
                 if (!Directory.Exists(_gitDir))
-                    Alert("Git " + DataRedundancy.Resources.Dictionary.DirectoryNotFound);
+                    Alert(new Exception("Git " + DataRedundancy.Resources.Dictionary.DirectoryNotFound));
                 else if (!Directory.Exists(_sourceDir))
-                    Alert("Source " + DataRedundancy.Resources.Dictionary.DirectoryNotFound);
+                    Alert(new Exception("Source " + DataRedundancy.Resources.Dictionary.DirectoryNotFound));
                 else if (Git.CheckSourceAndGitDirectory(_sourceDir, _gitDir, out alert))
                 {
                     Git.StartSync(_sourceDir, _gitDir);
                 }
-                if (alert != null)
-                {
-                    Alert(alert);
-                }
+         
+                Alert(alert == null ? null : new Exception(alert));
             }
         }
 
@@ -213,10 +215,9 @@ namespace AntiGitLibrary
                 {
                     if (drive.IsReady && drive.DriveType == DriveType.Fixed)
                     {
+                        result = Path.Combine(drive.Name, nameof(Backup));
 #if DEBUG
-                        result = Path.Combine(drive.Name, "backup");
-#else
-                        result = Path.Combine(drive.Name, "backupTest");
+                        result += "Test";
 #endif
                     }
                 }
@@ -305,7 +306,7 @@ namespace AntiGitLibrary
                 {
                     Git.CheckSourceAndGitDirectory(_sourceDir, _gitDir, out string alert);
                     if (alert != null)
-                        Alert(alert);
+                        Alert(new Exception(alert));
                     var source = new DirectoryInfo(_sourceDir);
                     var git = new DirectoryInfo(_gitDir);
                     var sourceCount = source.GetFileSystemInfos().Length;
@@ -314,14 +315,14 @@ namespace AntiGitLibrary
                     {
                         //if (!IsSourceAndGitCompatible(source, git)) // This line has been removed to prevent a merge between different versions: If you use Context it is good practice that the first programmer synchronizes their version on git, and everyone else creates their own version locally by cloning the Git one. This software does it automatically!
                         //{
-                        Alert(DataRedundancy.Resources.Dictionary.Error1);
+                        Alert(new Exception(DataRedundancy.Resources.Dictionary.Error1));
                         return false;
                         //}
                     }
                 }
                 catch (Exception ex)
                 {
-                    Alert(ex.Message);
+                    Alert(ex);
                     return false;
                 }
             }
@@ -329,24 +330,25 @@ namespace AntiGitLibrary
         }
 
         //internal static void Alert(string message, bool waitClick = false)
-        internal static void Alert(string message)
+        internal static void Alert(Exception ex)
         {
-            Console.WriteLine(message);
+            if (ex != null)
+            Console.WriteLine(ex.Message);
             //if (waitClick)
             //	_alert?.Invoke(message);
             // else 
             if (_alert != null)
-                Task.Run(() => _alert?.Invoke(message));
+                Task.Run(() => _alert?.Invoke(ex));
         }
-        private static Action<string> _alert;
+        private static Action<Exception> _alert;
 
         private readonly Timer BackupTimer; // It is used to keep a reference of the timer so as not to be removed from the garbage collector
 
         internal static readonly DirectoryInfo AppDir = new DirectoryInfo(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData) + @"\Context");
 
-        private string getValue(string name)
+        private string GetValue(string name)
         {
-            var file = Path.Combine(AppDir.FullName, name + ".txt");
+            var file = Path.Combine(AppDir.FullName, idContext == 0 ? "" : idContext + name + ".txt");
             return File.Exists(file) ? File.ReadAllText(file) : null;
         }
 
@@ -355,7 +357,7 @@ namespace AntiGitLibrary
 #if !TEST
             if (!AppDir.Exists)
                 AppDir.Create();
-            var file = Path.Combine(AppDir.FullName, name + ".txt");
+            var file = Path.Combine(AppDir.FullName, idContext == 0 ? "" : idContext + name + ".txt");
             File.WriteAllText(file, value);
 #endif
         }
@@ -364,7 +366,7 @@ namespace AntiGitLibrary
         internal static void RequestAdministrationMode(string descriprion)
         {
             if (_requestAdmin) return;
-            Alert(DataRedundancy.Resources.Dictionary.Error2 + Environment.NewLine + descriprion);
+            Alert(new Exception(DataRedundancy.Resources.Dictionary.Error2 + Environment.NewLine + descriprion));
             _requestAdmin = true;
         }
     }

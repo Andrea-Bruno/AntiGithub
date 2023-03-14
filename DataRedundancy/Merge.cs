@@ -23,7 +23,7 @@ namespace DataRedundancy
 		}
 #endif
 
-		public static void ExecuteMerge(FileInfo from, FileInfo to, Action<string> alert, FileInfo visualStudioBackupFile = null, FileInfo outputFile = null)
+		public static void ExecuteMerge(FileInfo from, FileInfo to, Action<Exception> alert, FileInfo visualStudioBackupFile = null, FileInfo outputFile = null)
 		{
 			var local = visualStudioBackupFile ?? to;
 			var listFrom = LoadTextFiles(from);
@@ -160,7 +160,7 @@ namespace DataRedundancy
 			{
 				// If the attempt fails it will be updated to the next round!
 				if (Support.IsDiskFull(e))
-					alert?.Invoke(e.Message);
+					alert?.Invoke(e);
 			}
 		}
 
