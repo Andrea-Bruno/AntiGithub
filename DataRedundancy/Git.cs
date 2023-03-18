@@ -34,12 +34,12 @@ namespace DataRedundancy
         }
         internal static readonly DirectoryInfo AppDir = new DirectoryInfo(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData) + nameof(DataRedundancy));
         private readonly Action<Exception> Alert;
-        private Thread gitTask;
         private int FullSyncCycle;
 #if DEBUG
         const int SleepMs = 5000;
 #else
         const int SleepMs = 60000;
+        private Thread gitTask;
 #endif
         /// <summary>
         /// If possible it suggests a directory to store data redundantly, otherwise it returns null
@@ -107,46 +107,48 @@ namespace DataRedundancy
         }
         public void StartSync(string sourcePath, string gitPath)
         {
+#if RELEASE
             gitTask = new Thread(() =>
             {
-                if (LocalFiles == null)
-                    LocalFiles = LoadMemoryFile(sourcePath);
-                if (RemoteFiles == null)
-                    RemoteFiles = LoadMemoryFile(gitPath);
-                FullSyncCycle = 0;
-                _stopSync = false;
+#endif
+            if (LocalFiles == null)
+                LocalFiles = LoadMemoryFile(sourcePath);
+            if (RemoteFiles == null)
+                RemoteFiles = LoadMemoryFile(gitPath);
+            FullSyncCycle = 0;
+            _stopSync = false;
 
-                StringCollection localFiles = null;
-                StringCollection remoteFiles = null;
+            StringCollection localFiles = null;
+            StringCollection remoteFiles = null;
 
-                while (!_stopSync)
+            while (!_stopSync)
+            {
+                if (!string.IsNullOrEmpty(sourcePath) && !string.IsNullOrEmpty(gitPath))
                 {
-                    if (!string.IsNullOrEmpty(sourcePath) && !string.IsNullOrEmpty(gitPath))
-                    {
-                        var oldestFile = DateTime.MinValue;
-                        var someFilesHaveChanged = false;
+                    var oldestFile = DateTime.MinValue;
+                    var someFilesHaveChanged = false;
 #if RELEASE
                         try
                         {
 #endif
-                        if (!IsSourceAndGitCompatible(new DirectoryInfo(sourcePath), new DirectoryInfo(gitPath)))
-                        {
-                            Alert?.Invoke(new Exception(Resources.Dictionary.Warning1));
-                            return;
-                        }
-                        var toBeDeleted = new List<string>();
-                        var skip = false;
-                        localFiles = null;
-                        SyncGit(ref oldestFile, ref someFilesHaveChanged, Scan.LocalDrive, sourcePath, gitPath, ref skip, ref toBeDeleted, ref localFiles);
-                        SaveMemoryFile(Scan.RemoteDrive, remoteFiles, gitPath);
-                        DeleteRemovedFiles(toBeDeleted, Scan.LocalDrive, sourcePath, gitPath);
-                        toBeDeleted = new List<string>();
-                        skip = false;
-                        remoteFiles = null;
-                        SyncGit(ref oldestFile, ref someFilesHaveChanged, Scan.RemoteDrive, gitPath, sourcePath, ref skip, ref toBeDeleted, ref remoteFiles);
-                        SaveMemoryFile(Scan.LocalDrive, localFiles, sourcePath);
-                        DeleteRemovedFiles(toBeDeleted, Scan.RemoteDrive, gitPath, sourcePath);
-                        FullSyncCycle++;
+                    if (!IsSourceAndGitCompatible(new DirectoryInfo(sourcePath), new DirectoryInfo(gitPath)))
+                    {
+                        Alert?.Invoke(new Exception(Resources.Dictionary.Warning1));
+                        return;
+                    }
+                    var toBeDeleted = new List<string>();
+                    var skip = false;
+                    localFiles = null;
+                    SyncGit(ref oldestFile, ref someFilesHaveChanged, Scan.LocalDrive, sourcePath, gitPath, ref skip, ref toBeDeleted, ref localFiles);
+                    SaveMemoryFile(Scan.RemoteDrive, remoteFiles, gitPath);
+                    DeleteRemovedFiles(toBeDeleted, Scan.LocalDrive, sourcePath, gitPath);
+                    toBeDeleted = new List<string>();
+                    skip = false;
+                    remoteFiles = null;
+                    SyncGit(ref oldestFile, ref someFilesHaveChanged, Scan.RemoteDrive, gitPath, sourcePath, ref skip, ref toBeDeleted, ref remoteFiles);
+                    SaveMemoryFile(Scan.LocalDrive, localFiles, sourcePath);
+                    DeleteRemovedFiles(toBeDeleted, Scan.RemoteDrive, gitPath, sourcePath);
+                    FullSyncCycle++;
 #if RELEASE
                         }
                         catch (Exception e)
@@ -168,25 +170,26 @@ namespace DataRedundancy
                             LastErrorTime = DateTime.UtcNow;
                         }
 #endif
-                        if (someFilesHaveChanged)
-                        {
-                            OnDataChanged?.Invoke();
-                        }
+                    if (someFilesHaveChanged)
+                    {
+                        OnDataChanged?.Invoke();
+                    }
 #if RELEASE
                         // If I don't see any recent changes, loosen the monitoring of the files so as not to stress the disk
                         if ((DateTime.UtcNow - oldestFile).TotalMinutes > 30)
                             Thread.Sleep(SleepMs);
 #endif
-                    }
-                    else
-                    {
-                        Thread.Sleep(SleepMs);
-                    }
                 }
-                _stopSync = true;
-            })
-            { Priority = ThreadPriority.Lowest };
+                else
+                {
+                    Thread.Sleep(SleepMs);
+                }
+            }
+            _stopSync = true;
+#if RELEASE
+            });
             gitTask.Start();
+#endif
         }
         private bool _stopSync = true;
 #if RELEASE
@@ -403,14 +406,25 @@ namespace DataRedundancy
                                         {
                                             if (!to.Directory.Exists)
                                                 to.Directory.Create();
+                                            var tmpFileName = Path.Combine(to.Directory.FullName, "." + to.Name);
                                             try
                                             {
-                                                File.Copy(from.FullName, to.FullName, true);
+                                                File.Copy(from.FullName, tmpFileName, true);
+                                                if (to.Exists)
+                                                    to.Delete();
+                                                File.Move(tmpFileName, to.FullName);
                                                 attempt = 0;
-
                                             }
                                             catch (Exception e)
                                             {
+                                                try
+                                                {
+                                                    Thread.Sleep(1000);
+                                                    if (File.Exists(tmpFileName))
+                                                        File.Delete(tmpFileName);
+                                                }
+                                                catch (Exception) { }
+
                                                 showError(e, to.FullName);
                                             }
                                         }

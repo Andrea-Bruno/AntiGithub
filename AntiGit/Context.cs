@@ -21,7 +21,7 @@ namespace AntiGitLibrary
         private readonly Git Git;
         private int idContext;
 
-        public Context(Action<Exception> alert = null, bool setCurrentDateTime = true, int id = 0)
+        public Context(Action<Exception> alert = null, bool setCurrentDateTime = true, int id = 0, string sourceDir = null)
         {
             idContext = id;
             WriteOutput(Info);
@@ -34,7 +34,10 @@ namespace AntiGitLibrary
 			_targetDir = "";
 			_gitDir = @"\\share\G\test";
 #else
-            _sourceDir = GetValue("source"); // ?? Directory.GetCurrentDirectory();
+            if (!string.IsNullOrEmpty(sourceDir))
+                _sourceDir = sourceDir;
+            else
+                _sourceDir = GetValue("source"); // ?? Directory.GetCurrentDirectory();
             _targetDir = GetValue("target"); // ?? Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), "backup");
             if (string.IsNullOrEmpty(_targetDir))
                 _targetDir = GetDefaultBackupPosition();
@@ -201,7 +204,7 @@ namespace AntiGitLibrary
                 {
                     Git.StartSync(_sourceDir, _gitDir);
                 }
-         
+
                 Alert(alert == null ? null : new Exception(alert));
             }
         }
@@ -333,7 +336,7 @@ namespace AntiGitLibrary
         internal static void Alert(Exception ex)
         {
             if (ex != null)
-            Console.WriteLine(ex.Message);
+                Console.WriteLine(ex.Message);
             //if (waitClick)
             //	_alert?.Invoke(message);
             // else 
