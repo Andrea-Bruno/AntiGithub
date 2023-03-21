@@ -4,6 +4,7 @@
     <TargetFramework>netstandard2.0</TargetFramework>
     <Configurations>Debug;Release;DebugMac;ReleaseMac;Test</Configurations>
     <NeutralLanguage>en</NeutralLanguage>
+    <Platforms>AnyCPU</Platforms>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='ReleaseMac|AnyCPU'">
