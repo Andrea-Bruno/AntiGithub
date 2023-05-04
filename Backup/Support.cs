@@ -3,6 +3,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices;
+using static BackupLibrary.Backup;
 
 namespace BackupLibrary
 {
@@ -168,7 +169,7 @@ namespace BackupLibrary
         }
         public static bool FileToExclude(string fileName)
         {
-            return fileName.StartsWith(".") || fileName.StartsWith("_") ||  ExcludeFiles.Contains(fileName.ToLower());
+            return fileName.StartsWith(".") || fileName.StartsWith("_") || ExcludeFiles.Contains(fileName.ToLower());
         }
 
         /// <summary>
@@ -245,17 +246,33 @@ namespace BackupLibrary
         }
 
         /// <summary>
+        /// Forcibly delete the directory even if it contains read-only items
         /// https://stackoverflow.com/questions/611921/how-do-i-delete-a-directory-with-read-only-files-in-c
         /// </summary>
         /// <param name="path">Directory to delete</param>
-        internal static void ForceDeleteDirectory(DirectoryInfo directory)
+        internal static void ForceDeleteDirectory(DirectoryInfo directory, AllertNotification OnAlert = null)
         {
-            if (directory.Exists)
+            try
             {
-                directory.Attributes = FileAttributes.Normal;
-                foreach (var info in directory.GetFileSystemInfos("*", SearchOption.AllDirectories))
-                    info.Attributes = FileAttributes.Normal;
+                if (directory.Attributes.HasFlag(FileAttributes.ReparsePoint)) // is a link
+                {
+                    directory.Delete();
+                    return;
+                }
+                foreach (var subDir in directory.GetDirectories())
+                {
+                    ForceDeleteDirectory(subDir, OnAlert);
+                }
+                foreach (var file in directory.GetFileSystemInfos())
+                {
+                    if (file.Attributes.HasFlag(FileAttributes.ReadOnly))
+                        file.Attributes = FileAttributes.Normal;
+                }
                 directory.Delete(true);
+            }
+            catch (Exception ex)
+            {
+                OnAlert?.Invoke(ex.Message, true);
             }
         }
     }

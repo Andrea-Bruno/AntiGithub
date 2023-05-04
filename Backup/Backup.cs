@@ -125,8 +125,10 @@ namespace BackupLibrary
                         ExecuteBackup(sourceDir, targetPath, lastTargetPath, new List<FileOperation>());
                         BackupRunning--;
                     })
-                    { Priority = ThreadPriority.Lowest };
-                    BackupThread.Name = nameof(Backup) + backupType.ToString();
+                    {
+                        Priority = ThreadPriority.Lowest,
+                        Name = nameof(Backup) + backupType.ToString()
+                    };
                     BackupThread.Start();
                     if (backupType == BackupType.Daily)
                         BackupThreadDaily = BackupThread;
