@@ -45,7 +45,7 @@ namespace BackupLibrary
             pathWatcher.Changed += (s, e) => RequestSynchronization(e);
             pathWatcher.Deleted += (s, e) => RequestSynchronization(e);
         }
-        public bool Enabled { get { return pathWatcher.EnableRaisingEvents; } set { pathWatcher.EnableRaisingEvents = value; } }
+        public bool Enabled { get { return pathWatcher != null && pathWatcher.EnableRaisingEvents; } set { if (pathWatcher != null) pathWatcher.EnableRaisingEvents = value; } }
         public void RequestSynchronization(FileSystemEventArgs e)
         {
             FileInfo file = new FileInfo(System.IO.Path.Combine(e.FullPath, e.Name));           
