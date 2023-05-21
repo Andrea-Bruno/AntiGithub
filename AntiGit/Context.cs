@@ -19,11 +19,17 @@ namespace AntiGitLibrary
         public readonly string Info = DataRedundancy.Resources.Dictionary.Info;
         private readonly Backup Backup;
         private readonly Git Git;
-        private int idContext;
-
+        private readonly int IdContext;
+        /// <summary>
+        /// Context initializer that manages the underlying libraries for remote file redundancy and backups
+        /// </summary>
+        /// <param name="alert">Function that acts as an event for displaying alert logs that can be created by the underlying libraries. When something noteworthy happens in the underlying libraries, the called company is executed reporting a description of what happened</param>
+        /// <param name="setCurrentDateTime">The file synchronization and backup functions, if running on a machine that has the incorrect date and time, can work anomalously, as the files may carry incorrect data about their creation. By setting this parameter to true, the date and time of the device will be updated in order to obtain correct operation of the application. Updating the date and time usually requires the application to run in administrator mode.</param>
+        /// <param name="id">The id is used to create multiple instances of the class, this in the case of applications that need to virtualize multiple functions and mount multiple backup units.</param>
+        /// <param name="sourceDir">It is the source directory to be backed up and the source of redundant remote file synchronization</param>
         public Context(Action<Exception> alert = null, bool setCurrentDateTime = true, int id = 0, string sourceDir = null)
         {
-            idContext = id;
+            IdContext = id;
             WriteOutput(Info);
             Backup = new Backup();
 
@@ -191,6 +197,10 @@ namespace AntiGitLibrary
             //Debug.WriteLine(text);
             Console.WriteLine(text);
         }
+
+        /// <summary>
+        /// Function that when called starts data synchronization in real time (mirroring), between source directory and remote directory on the network path (also called git directory).
+        /// </summary>
         public void SyncGit()
         {
             if (!string.IsNullOrEmpty(_gitDir))
@@ -234,6 +244,10 @@ namespace AntiGitLibrary
         }
 
         private string _sourceDir;
+
+        /// <summary>
+        /// Source directory, which you want to backup and have data redundancy remotely.
+        /// </summary>
         public string SourceDir
         {
             get => _sourceDir;
@@ -254,6 +268,9 @@ namespace AntiGitLibrary
         }
         private string _targetDir;
 
+        /// <summary>
+        /// The directory where backups are saved
+        /// </summary>
         public string TargetDir
         {
             get => _targetDir;
@@ -272,6 +289,9 @@ namespace AntiGitLibrary
         }
         private string _gitDir;
 
+        /// <summary>
+        /// Network location for real-time data redundancy. The data of the source directory will also be replicated in this path, in which multiple users will be able to work indirectly and take advantage of the merge functions. For more information see the underlying library DataRedundancy
+        /// </summary>
         public string GitDir
         {
             get => _gitDir;
@@ -351,7 +371,7 @@ namespace AntiGitLibrary
 
         private string GetValue(string name)
         {
-            var file = Path.Combine(AppDir.FullName, idContext == 0 ? "" : idContext + name + ".txt");
+            var file = Path.Combine(AppDir.FullName, IdContext == 0 ? "" : IdContext + name + ".txt");
             return File.Exists(file) ? File.ReadAllText(file) : null;
         }
 
@@ -360,7 +380,7 @@ namespace AntiGitLibrary
 #if !TEST
             if (!AppDir.Exists)
                 AppDir.Create();
-            var file = Path.Combine(AppDir.FullName, idContext == 0 ? "" : idContext + name + ".txt");
+            var file = Path.Combine(AppDir.FullName, IdContext == 0 ? "" : IdContext + name + ".txt");
             File.WriteAllText(file, value);
 #endif
         }
