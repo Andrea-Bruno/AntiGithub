@@ -47,6 +47,7 @@ namespace BackupLibrary
             {
                 RedirectStandardOutput = true,
                 UseShellExecute = false,
+                WindowStyle = ProcessWindowStyle.Hidden,
                 CreateNoWindow = true,
             };
 

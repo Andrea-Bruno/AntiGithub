@@ -1,8 +1,5 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.IO;
-using System.Security.Cryptography.X509Certificates;
-using System.Text;
 
 namespace BackupLibrary
 {
@@ -27,28 +24,49 @@ namespace BackupLibrary
                     pathWatcher.EnableRaisingEvents = false;
                 _Path = value;
                 if (_Path != null && Directory.Exists(_Path))
-                    Watch(_Path);
+                    Watch();
+                else
+                    StopTryStartMonitoring();
             }
         }
         private readonly Action OnChange;
         private FileSystemWatcher pathWatcher;
-        private void Watch(string path)
+        private void Watch()
         {
-            pathWatcher = new FileSystemWatcher
-            {
-                Path = path,
-                NotifyFilter = NotifyFilters.LastWrite | NotifyFilters.FileName | NotifyFilters.DirectoryName | NotifyFilters.CreationTime,
-                Filter = "*.*",
-                EnableRaisingEvents = true,
-                IncludeSubdirectories = true
-            };
-            pathWatcher.Changed += (s, e) => RequestSynchronization(e);
-            pathWatcher.Deleted += (s, e) => RequestSynchronization(e);
+            // If the directory to monitor is the path to a virtual disk, it will fail if the disk is not mounted, with a dimer then monitor when the file is mounted. 
+            TryStartMonitoring = new System.Threading.Timer(StartMonitoring, null, 0, 60000);
         }
+        private void StopTryStartMonitoring()
+        {
+            TryStartMonitoring?.Change(System.Threading.Timeout.Infinite, System.Threading.Timeout.Infinite);
+            TryStartMonitoring = null;
+        }
+        private System.Threading.Timer TryStartMonitoring;
+        private void StartMonitoring(object o)
+        {
+            try
+            {
+                pathWatcher = new FileSystemWatcher
+                {
+                    Path = _Path,
+                    NotifyFilter = NotifyFilters.LastWrite | NotifyFilters.FileName | NotifyFilters.DirectoryName | NotifyFilters.CreationTime,
+                    Filter = "*.*",
+                    EnableRaisingEvents = true,
+                    IncludeSubdirectories = true
+                };
+                pathWatcher.Changed += (s, e) => RequestSynchronization(e);
+                pathWatcher.Deleted += (s, e) => RequestSynchronization(e);
+                StopTryStartMonitoring();
+            }
+            catch (Exception)
+            {
+            }
+        }
+
         public bool Enabled { get { return pathWatcher != null && pathWatcher.EnableRaisingEvents; } set { if (pathWatcher != null) pathWatcher.EnableRaisingEvents = value; } }
         public void RequestSynchronization(FileSystemEventArgs e)
         {
-            FileInfo file = new FileInfo(System.IO.Path.Combine(e.FullPath, e.Name));           
+            FileInfo file = new FileInfo(System.IO.Path.Combine(e.FullPath, e.Name));
             if (file.Exists)
             {
                 if (file.Attributes.HasFlag(FileAttributes.Hidden))
