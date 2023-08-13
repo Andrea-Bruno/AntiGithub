@@ -45,13 +45,13 @@ namespace AntiGitLibrary
             else
                 _sourceDir = GetValue("source"); // ?? Directory.GetCurrentDirectory();
             _targetDir = GetValue("target"); // ?? Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), "backup");
-            if (string.IsNullOrEmpty(_targetDir))
+            if (_targetDir == null)
                 _targetDir = GetDefaultBackupPosition();
             _gitDir = GetValue("git");
 #endif
             if (setCurrentDateTime)
                 SetCurrentDateTime();
-            BackupTimer = new Timer(x => StartBackup(), null, TimeSpan.Zero, TimeSpan.FromMinutes(5)); // set timespan to start the firse backup, the next backups will be one day apart
+            BackupTimer = new Timer(x => StartBackup(), null, TimeSpan.FromMinutes(10), TimeSpan.Zero); // set timespan to start the firse backup, the next backups will be one day apart
             SyncGit();
             Monitoring = new PathMonitoring(_sourceDir, BackupOfTheChange);
         }
