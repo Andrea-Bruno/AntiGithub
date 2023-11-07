@@ -251,7 +251,7 @@ namespace BackupLibrary
         /// https://stackoverflow.com/questions/611921/how-do-i-delete-a-directory-with-read-only-files-in-c
         /// </summary>
         /// <param name="path">Directory to delete</param>
-        internal static void ForceDeleteDirectory(DirectoryInfo directory, AllertNotification OnAlert = null)
+        internal static void ForceDeleteDirectory(DirectoryInfo directory, AlertNotification OnAlert = null)
         {
             try
             {

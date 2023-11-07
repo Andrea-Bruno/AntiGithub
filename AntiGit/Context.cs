@@ -11,6 +11,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using BackupLibrary;
 using DataRedundancy;
+using static BackupLibrary.Backup;
 
 namespace AntiGitLibrary
 {
@@ -35,11 +36,6 @@ namespace AntiGitLibrary
 
             Git = new Git(Alert, BackupOfTheChange);
             _alert = alert;
-#if TEST
-			_sourceDir = @"c:\test";
-			_targetDir = "";
-			_gitDir = @"\\share\G\test";
-#else
             if (!string.IsNullOrEmpty(sourceDir))
                 _sourceDir = sourceDir;
             else
@@ -47,26 +43,47 @@ namespace AntiGitLibrary
             _targetDir = GetValue("target"); // ?? Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), "backup");
             if (_targetDir == null)
                 _targetDir = GetDefaultBackupPosition();
-            _gitDir = GetValue("git");
+#if DEBUG
+            _targetDir = ""; // disabled backup in debug mode
 #endif
+            _gitDir = GetValue("git");
             if (setCurrentDateTime)
                 SetCurrentDateTime();
-            BackupTimer = new Timer(x => StartBackup(), null, TimeSpan.FromMinutes(10), TimeSpan.Zero); // set timespan to start the firse backup, the next backups will be one day apart
+            BackupTimer = new Timer(x => StartBackup(), null, (int)TimeSpan.FromMinutes(20).TotalMilliseconds, (int)TimeSpan.FromHours(1).TotalMilliseconds);
+
+            //BackupTimer = new System.Timers.Timer(TimeSpan.FromMinutes(10).TotalMilliseconds);
+            //BackupTimer.Elapsed += (s, e) => StartBackup();
+            //BackupTimer.AutoReset = false;
+            //BackupTimer.Enabled = true;
+
+
             SyncGit();
             Monitoring = new PathMonitoring(_sourceDir, BackupOfTheChange);
         }
         private readonly PathMonitoring Monitoring;
         public void StopSyncGit() => Git.StopSyncGit();
         public bool SyncGitRunning => Git.SyncGitRunning;
-        public string StartBackup(bool overwriteExisting = false)
+
+        /// <summary>
+        /// Start daily backup
+        /// </summary>
+        /// <param name="overwriteExisting">True to overwrite any existing backup made on the same day</param>
+        /// <returns>Outcome of the operation</returns>
+        public Outcome StartBackup(bool overwriteExisting = false)
         {
-            BackupTimer.Change(TimeSpan.FromDays(1), TimeSpan.FromDays(1)); // Next backup after 1 day
-            return Backup.Start(SourceDir, TargetDir, Backup.BackupType.Daily, overwriteExisting).ToString();
+            //BackupTimer.Change((int)TimeSpan.FromDays(1).TotalMilliseconds, Timeout.Infinite); // Next backup after 1 day
+            //BackupTimer.Interval = TimeSpan.FromDays(1).TotalMilliseconds; // Next backup after 1 day
+            var outcome = Backup.Start(SourceDir, TargetDir, Backup.BackupType.Daily, overwriteExisting);//  
+            LastDailyBackupResult = new Tuple<DateTime, Outcome>(DateTime.Now, outcome);
+            return outcome;
         }
 
+        // If not null, indicates the outcome of the last daily backup and when it was performed
+        public Tuple<DateTime, Outcome> LastDailyBackupResult { get; private set; }
+
         public bool BackupRunning => Backup.BackupRunning != 0;
-        public bool DailyBckupIsRunning => Backup.DailyBckupIsRunning;
-        public bool OnChangeBckupIsRunning => Backup.OnChangeBckupIsRunning;
+        public bool DailyBckupIsRunning => Backup.DailyBackupIsRunning;
+        public bool OnChangeBckupIsRunning => Backup.OnChangeBackupIsRunning;
 
         public struct SystemTime
         {

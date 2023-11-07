@@ -17,15 +17,15 @@ namespace BackupLibrary
         public Backup()
         {
         }
-        public DateTime LastBackup { get; private set; }
-        public bool DailyBckupIsRunning => BackupThreadDaily != null && BackupThreadDaily.IsAlive;
-        public bool OnChangeBckupIsRunning => BackupThreadOnChange != null && BackupThreadOnChange.IsAlive;
+        public DateTime LastDailyBackup { get; private set; }
+        public bool DailyBackupIsRunning => BackupThreadDaily != null && BackupThreadDaily.IsAlive;
+        public bool OnChangeBackupIsRunning => BackupThreadOnChange != null && BackupThreadOnChange.IsAlive;
         private Thread BackupThreadDaily;
         private Thread BackupThreadOnChange;
         internal bool StopBackup = false;
         public int BackupRunning { get; private set; }
-        public delegate void AllertNotification(string description, bool important);
-        static public event AllertNotification OnAlert;
+        public delegate void AlertNotification(string description, bool important);
+        static public event AlertNotification OnAlert;
         internal static void InvokeOnAlert(string description, bool important) => OnAlert?.Invoke(description, important);
         public enum BackupType
         {
@@ -36,7 +36,7 @@ namespace BackupLibrary
         private Dictionary<string, System.Timers.Timer> Timers = new Dictionary<string, System.Timers.Timer>();
         public Outcome Start(string sourceDir, string targetDir, BackupType backupType = BackupType.Daily, bool overwriteDailyBackup = false)
         {
-            if (!overwriteDailyBackup && backupType == BackupType.Daily && new DateTime(LastBackup.Year, LastBackup.Month, LastBackup.Day) == new DateTime(DateTime.UtcNow.Year, DateTime.UtcNow.Month, DateTime.UtcNow.Day))
+            if (!overwriteDailyBackup && backupType == BackupType.Daily && new DateTime(LastDailyBackup.Year, LastDailyBackup.Month, LastDailyBackup.Day) == new DateTime(DateTime.UtcNow.Year, DateTime.UtcNow.Month, DateTime.UtcNow.Day))
                 return Outcome.AlreadyDone;
             var BackupThread = backupType == BackupType.Daily? BackupThreadDaily : BackupThreadOnChange;
             if (BackupThread == null || !BackupThread.IsAlive) // Prevents the backup from running if it is already in progress
@@ -90,12 +90,12 @@ namespace BackupLibrary
                     {
                         var today = DateTime.Now;
                         today.AddSeconds(-30); // prevent backups set for midnight from having a random date
-                        LastBackup = today.ToUniversalTime();
                         BackupRunning++;
                         var targetPath = backupType == BackupType.Daily ? Path.Combine(targetDir, today.ToString("yyyy MM dd", CultureInfo.InvariantCulture)) : Path.Combine(targetDir, "today", today.ToString("HH mm", CultureInfo.InvariantCulture));
                         DirectoryInfo target;
                         if (backupType == BackupType.Daily)
                         {
+                            LastDailyBackup = today.ToUniversalTime();
                             target = new DirectoryInfo(targetDir);
                         }
                         else
