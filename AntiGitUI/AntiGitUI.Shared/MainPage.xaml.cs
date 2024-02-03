@@ -30,9 +30,9 @@ namespace AntiGitUI
 		{
 			this.InitializeComponent();
 
-			void Alert(string Message)
+			void Alert(Exception Exception)
 			{
-				var dialog = new MessageDialog(Message);
+				var dialog = new MessageDialog(Exception.Message);
 				_ = dialog.ShowAsync();
 			}
 			AntiGithub = new AntiGitLibrary.Context(Alert);
@@ -94,7 +94,7 @@ namespace AntiGitUI
 
 		private void Backup_Click(object sender, RoutedEventArgs e)
 		{
-			AntiGithub.StartBackup();
+			AntiGithub.StartBackup2(out _);
 		}
 
 	}

@@ -86,7 +86,7 @@ namespace AntiGitUi
 
         private void Backup_Click(object sender, EventArgs e)
         {
-            AntiGithub.StartBackup();
+            AntiGithub.StartBackup2(out _);
         }
 
         private void Form1_FormClosed(object sender, FormClosedEventArgs e)

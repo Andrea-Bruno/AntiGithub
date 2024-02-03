@@ -78,6 +78,17 @@ namespace AntiGitLibrary
             return outcome;
         }
 
+        /// <summary>
+        /// Start daily backup with text result description
+        /// </summary>
+        /// <param name="result">textual outcome of the operation</param>
+        /// <param name="overwriteExisting">True to overwrite any existing backup made on the same day</param>
+        public void StartBackup2(out string result, bool overwriteExisting = false)
+        {
+            Outcome outcome = StartBackup(overwriteExisting);
+            result = outcome.ToString();
+        }
+
         // If not null, indicates the outcome of the last daily backup and when it was performed
         public Tuple<DateTime, Outcome> LastDailyBackupResult { get; private set; }
 
