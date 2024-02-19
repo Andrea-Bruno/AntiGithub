@@ -2,8 +2,10 @@
 
   <PropertyGroup>
     <TargetFramework>netstandard2.0</TargetFramework>
+    <Configurations>Debug;Release</Configurations>
   </PropertyGroup>
 
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' " />
   <ItemGroup>
     <Compile Update="Resources\Dictionary.Designer.cs">
       <DependentUpon>Dictionary.resx</DependentUpon>

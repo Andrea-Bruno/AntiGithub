@@ -1,8 +1,8 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>netstandard2.0</TargetFramework>
-    <Configurations>Debug;Release;DebugMac;ReleaseMac;Test</Configurations>
+    <TargetFramework>netstandard2.1</TargetFramework>
+    <Configurations>ReleaseMac;DebugMac;Debug;Test;Release</Configurations>
     <NeutralLanguage>en</NeutralLanguage>
     <Platforms>AnyCPU</Platforms>
   </PropertyGroup>
