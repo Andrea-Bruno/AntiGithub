@@ -441,9 +441,9 @@ namespace DataRedundancy
                                         File.SetLastWriteTimeUtc(to.FullName, from.CreationTimeUtc);
                                     }
 #if DEBUG
-                                    var verifyFron = new FileInfo(from.FullName);
+                                    var verifyFrom = new FileInfo(from.FullName);
                                     var verifyTo = new FileInfo(to.FullName);
-                                    if (Math.Abs((verifyTo.LastWriteTime - verifyFron.LastWriteTime).TotalSeconds) > 1) // Check if date is different
+                                    if (Math.Abs((verifyTo.LastWriteTime - verifyFrom.LastWriteTime).TotalSeconds) > 1) // Check if date is different
                                         Debugger.Break();
 #endif
                                     if (compilationTime != null)

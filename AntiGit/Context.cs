@@ -31,7 +31,7 @@ namespace AntiGitLibrary
         public Context(Action<Exception> alert = null, bool setCurrentDateTime = true, int id = 0, string sourceDir = null)
         {
             IdContext = id;
-            WriteOutput(Info);
+            // WriteOutput(Info);
             Backup = new Backup();
 
             Git = new Git(Alert, BackupOfTheChange);
