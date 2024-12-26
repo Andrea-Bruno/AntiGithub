@@ -117,13 +117,28 @@ namespace BackupLibrary
         {
             try
             {
+                var error = false;
                 if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
                 {
-                    ExecuteSystemCommand("mklink /d \"" + linkFileName + "\" \"" + targetFileName + "\"");
+                    // ExecuteSystemCommand("mklink /d \"" + linkFileName + "\" \"" + targetFileName + "\"");
+                    bool isDirectory = Directory.Exists(targetFileName);
+                    int flags = isDirectory ? OSSupport.SYMBOLIC_LINK_FLAG_DIRECTORY : OSSupport.SYMBOLIC_LINK_FLAG_FILE;
+
+                    // Crea il collegamento simbolico
+                    var result = OSSupport.CreateSymbolicLink(linkFileName, targetFileName, flags);
+                    error = !result;
                 }
                 else
                 {
-                    ExecuteSystemCommand("ln -s \"" + targetFileName + "\" \"" + linkFileName + "\"");
+                    //  ExecuteSystemCommand("ln -s \"" + targetFileName + "\" \"" + linkFileName + "\"");
+                    int result = OSSupport.symlink(targetFileName, linkFileName);
+                    error = result != 0;
+                }
+                if (error)
+                {
+                    var message = $"ERROR: {nameof(_CreateSymbolicLink)}({linkFileName}, {targetFileName})";
+                    Console.WriteLine(message);
+                    // throw new IOException(message);
                 }
             }
             catch (Exception ex)
@@ -137,13 +152,25 @@ namespace BackupLibrary
         {
             try
             {
+                var error = false;
                 if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
                 {
-                    ExecuteSystemCommand("mklink /h \"" + linkFileName + "\" \"" + targetFileName + "\"");
+                    // ExecuteSystemCommand("mklink /h \"" + linkFileName + "\" \"" + targetFileName + "\"");
+                    bool result = OSSupport.CreateHardLink(linkFileName, targetFileName, IntPtr.Zero);
+                    error = !result;
                 }
                 else
                 {
-                    ExecuteSystemCommand("ln \"" + targetFileName + "\" \"" + linkFileName + "\"");
+                    // ExecuteSystemCommand("ln \"" + targetFileName + "\" \"" + linkFileName + "\"");
+
+                    int result = OSSupport.link(targetFileName, linkFileName);
+                    error = result != 0;
+                }
+                if (error)
+                {
+                    var message = $"ERROR: {nameof(_CreateHardLink)}({linkFileName}, {targetFileName})";
+                    Console.WriteLine(message);
+                    throw new IOException(message);
                 }
             }
             catch (Exception ex)
