@@ -39,7 +39,7 @@ namespace DataRedundancy.Resources {
         public static global::System.Resources.ResourceManager ResourceManager {
             get {
                 if (object.ReferenceEquals(resourceMan, null)) {
-                    global::System.Resources.ResourceManager temp = new global::System.Resources.ResourceManager("DataRedundancy.resources.Dictionary", typeof(Dictionary).Assembly);
+                    global::System.Resources.ResourceManager temp = new global::System.Resources.ResourceManager("DataRedundancy.Resources.Dictionary", typeof(Dictionary).Assembly);
                     resourceMan = temp;
                 }
                 return resourceMan;

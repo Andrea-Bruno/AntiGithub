@@ -115,6 +115,8 @@ namespace BackupLibrary
 
         static private FileSystemInfo _CreateSymbolicLink(string linkFileName, string targetFileName)
         {
+            targetFileName = GetAbsolutePath(linkFileName, targetFileName);
+            Debugger.Break();
             try
             {
                 var error = false;
@@ -150,6 +152,8 @@ namespace BackupLibrary
 
         static private FileSystemInfo _CreateHardLink(string linkFileName, string targetFileName)
         {
+            targetFileName = GetAbsolutePath(linkFileName, targetFileName);
+            Debugger.Break();
             try
             {
                 var error = false;
@@ -180,6 +184,17 @@ namespace BackupLibrary
             return new FileInfo(linkFileName);
         }
 
+        static string GetAbsolutePath(string basePath, string relativePath)
+        {
+            // Combine the base path and the relative path
+            string combinedPath = Path.Combine(basePath, relativePath);
+
+            // Resolve ".." and "." in the path
+            string absolutePath = Path.GetFullPath(combinedPath);
+
+            return absolutePath;
+        }
+
         private static DateTime RoundDate(DateTime dt)
         {
             // FAT / VFAT has a maximum resolution of 2s
@@ -193,11 +208,11 @@ namespace BackupLibrary
         public static readonly string[] ExcludeDir = { "bin", "obj", ".vs", "packages", "apppackages" };
         public static bool DirToExclude(string dirName)
         {
-            return dirName.StartsWith(".") || dirName.StartsWith("_") || ExcludeDir.Contains(dirName.ToLower());
+            return dirName.StartsWith(".") || dirName.StartsWith("~") || dirName.EndsWith("_") || ExcludeDir.Contains(dirName.ToLower());
         }
         public static bool FileToExclude(string fileName)
         {
-            return fileName.StartsWith(".") || fileName.StartsWith("_") || ExcludeFiles.Contains(fileName.ToLower());
+            return fileName.StartsWith(".") || fileName.StartsWith("~") || fileName.EndsWith("_") || ExcludeFiles.Contains(fileName.ToLower());
         }
 
         /// <summary>
