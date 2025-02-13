@@ -13,31 +13,8 @@ namespace BackupLibrary
         private const int HrErrorDiskFull = unchecked((int)0x80070070);
         private const int ErrorSharingViolation = unchecked((int)0x80070020);
 
-        //internal static void ExecuteCommand(string command, string arguments)
-        //{
-        //    var proc = new Process
-        //    {
-        //        StartInfo = {
-        //            FileName =  command,
-        //            Arguments = arguments,
-        //            RedirectStandardInput = true,
-        //            UseShellExecute = false,
-        //            CreateNoWindow = true,
-        //        }
-        //    };
-        //    try
-        //    {
-        //        proc.Start();
-        //        proc.WaitForExit();
-        //    }
-        //    catch (Exception ex)
-        //    {
-        //        Console.WriteLine(ex.Message);
-        //    }
-        //}
-
         /// <summary>
-        /// Run a bash terminal command (linux/mac) or cmd on windows.
+        /// Run a bash terminal command (Linux/Mac) or cmd on windows.
         /// List of bash command https://www.logicweb.com/knowledgebase/linux/linux-bash-commands-a-z/
         /// </summary>
         /// <returns>The output of the operation</returns>
@@ -125,8 +102,6 @@ namespace BackupLibrary
                     // ExecuteSystemCommand("mklink /d \"" + linkFileName + "\" \"" + targetFileName + "\"");
                     bool isDirectory = Directory.Exists(targetFileName);
                     int flags = isDirectory ? OSSupport.SYMBOLIC_LINK_FLAG_DIRECTORY : OSSupport.SYMBOLIC_LINK_FLAG_FILE;
-
-                    // Crea il collegamento simbolico
                     var result = OSSupport.CreateSymbolicLink(linkFileName, targetFileName, flags);
                     error = !result;
                 }

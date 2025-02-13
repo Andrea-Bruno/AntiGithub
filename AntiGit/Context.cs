@@ -5,6 +5,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Net.Http;
 using System.Runtime.InteropServices;
 using System.Threading;
@@ -247,19 +248,32 @@ namespace AntiGitLibrary
             }
         }
 
-        private static string GetDefaultBackupPosition()
+        public static string GetDefaultBackupPosition(string[] exclude = null)
         {
+            var systemDrive  = new DirectoryInfo(Directory.GetCurrentDirectory()).Root.Name;
+
+            string[] allowedRoot = null;
+            string[] disallowedPath = null;
+            if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
+            {
+                allowedRoot = new string[] { "Volumes" };
+                disallowedPath = new string[] { "/Volumes/Recovery" };
+            }
             try
             {
                 string result = null;
                 foreach (var drive in DriveInfo.GetDrives())
                 {
-                    if (drive.IsReady && drive.DriveType == DriveType.Fixed)
+                    if (drive.IsReady && drive.DriveType == DriveType.Fixed && drive.Name != systemDrive)
                     {
-                        result = Path.Combine(drive.Name, nameof(Backup));
-#if DEBUG
-                        result += "Test";
-#endif
+                        var firstElement = drive.RootDirectory.FullName.Split(Path.DirectorySeparatorChar, StringSplitOptions.RemoveEmptyEntries).FirstOrDefault();
+                        if ((allowedRoot == null || allowedRoot.Contains(firstElement)) && (disallowedPath == null || !disallowedPath.Contains(drive.Name)))
+                        {
+                            result = Path.Combine(drive.RootDirectory.FullName, nameof(Backup));
+//#if DEBUG
+//                        result += "Test";
+//#endif
+                        }
                     }
                 }
                 return result;
