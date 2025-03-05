@@ -6,12 +6,13 @@ namespace BackupLibrary
     public class PathMonitoring
     {
         /// <summary>
-        /// Demone per il monitoraggio delle modifiche in una directory
+        /// Daemon for monitoring changes in a directory
         /// </summary>
         /// <param name="path">Directories to monitor</param>
         /// <param name="onChange">Action to take when changes are revealed</param>
-        public PathMonitoring(string path, Action onChange)
+        public PathMonitoring(bool enabledAutoBackup, string path, Action onChange)
         {
+            EnabledAutoBackup = enabledAutoBackup;
             OnChange = onChange;
             Path = path;
         }
@@ -29,6 +30,9 @@ namespace BackupLibrary
                     StopTryStartMonitoring();
             }
         }
+
+        public bool EnabledAutoBackup { get; set; }
+
         private readonly Action OnChange;
         private FileSystemWatcher pathWatcher;
         private void Watch()
@@ -63,20 +67,23 @@ namespace BackupLibrary
             }
         }
 
-        public bool Enabled { get { return pathWatcher != null && pathWatcher.EnableRaisingEvents; } set { if (pathWatcher != null) pathWatcher.EnableRaisingEvents = value; } }
+        public bool Enabled { get { return EnabledAutoBackup && pathWatcher != null && pathWatcher.EnableRaisingEvents; } set { if (pathWatcher != null) pathWatcher.EnableRaisingEvents = value; } }
         public void RequestSynchronization(FileSystemEventArgs e)
         {
-            FileInfo file = new FileInfo(System.IO.Path.Combine(e.FullPath, e.Name));
-            if (file.Exists)
+            if (EnabledAutoBackup)
             {
-                if (file.Attributes.HasFlag(FileAttributes.Hidden))
-                    return;
-                else if (file.Attributes.HasFlag(FileAttributes.Directory) && Support.DirToExclude(e.Name))
-                    return;
-                else if (!file.Attributes.HasFlag(FileAttributes.Directory) && !file.Attributes.HasFlag(FileAttributes.Device) && Support.FileToExclude(e.Name))
-                    return;
+                FileInfo file = new FileInfo(System.IO.Path.Combine(e.FullPath, e.Name));
+                if (file.Exists)
+                {
+                    if (file.Attributes.HasFlag(FileAttributes.Hidden))
+                        return;
+                    else if (file.Attributes.HasFlag(FileAttributes.Directory) && Support.DirToExclude(e.Name))
+                        return;
+                    else if (!file.Attributes.HasFlag(FileAttributes.Directory) && !file.Attributes.HasFlag(FileAttributes.Device) && Support.FileToExclude(e.Name))
+                        return;
+                }
+                OnChange?.Invoke();
             }
-            OnChange?.Invoke();
         }
     }
 }

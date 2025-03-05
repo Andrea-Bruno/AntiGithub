@@ -37,6 +37,7 @@ namespace AntiGitLibrary
 
             Git = new Git(Alert, BackupOfTheChange);
             _alert = alert;
+
             if (!string.IsNullOrEmpty(sourceDir))
                 _sourceDir = sourceDir;
             else
@@ -50,7 +51,11 @@ namespace AntiGitLibrary
             _gitDir = GetValue("git");
             if (setCurrentDateTime)
                 SetCurrentDateTime();
-            BackupTimer = new Timer(x => StartBackup(), null, (int)TimeSpan.FromMinutes(20).TotalMilliseconds, (int)TimeSpan.FromHours(1).TotalMilliseconds);
+            BackupTimer = new Timer(x =>
+            {
+                if (EnabledAutoBackup)
+                    StartBackup();
+            }, null, (int)TimeSpan.FromMinutes(20).TotalMilliseconds, (int)TimeSpan.FromHours(1).TotalMilliseconds);
 
             //BackupTimer = new System.Timers.Timer(TimeSpan.FromMinutes(10).TotalMilliseconds);
             //BackupTimer.Elapsed += (s, e) => StartBackup();
@@ -59,7 +64,7 @@ namespace AntiGitLibrary
 
 
             SyncGit();
-            Monitoring = new PathMonitoring(_sourceDir, BackupOfTheChange);
+            Monitoring = new PathMonitoring(EnabledAutoBackup, _sourceDir, BackupOfTheChange);
         }
         private readonly PathMonitoring Monitoring;
         public void StopSyncGit() => Git.StopSyncGit();
@@ -72,8 +77,6 @@ namespace AntiGitLibrary
         /// <returns>Outcome of the operation</returns>
         public Outcome StartBackup(bool overwriteExisting = false)
         {
-            //BackupTimer.Change((int)TimeSpan.FromDays(1).TotalMilliseconds, Timeout.Infinite); // Next backup after 1 day
-            //BackupTimer.Interval = TimeSpan.FromDays(1).TotalMilliseconds; // Next backup after 1 day
             var outcome = Backup.Start(SourceDir, TargetDir, Backup.BackupType.Daily, overwriteExisting);//  
             LastDailyBackupResult = new Tuple<DateTime, Outcome>(DateTime.Now, outcome);
             return outcome;
@@ -250,7 +253,7 @@ namespace AntiGitLibrary
 
         public static string GetDefaultBackupPosition(string[] exclude = null)
         {
-            var systemDrive  = new DirectoryInfo(Directory.GetCurrentDirectory()).Root.Name;
+            var systemDrive = new DirectoryInfo(Directory.GetCurrentDirectory()).Root.Name;
 
             string[] allowedRoot = null;
             string[] disallowedPath = null;
@@ -270,9 +273,9 @@ namespace AntiGitLibrary
                         if ((allowedRoot == null || allowedRoot.Contains(firstElement)) && (disallowedPath == null || !disallowedPath.Contains(drive.Name)))
                         {
                             result = Path.Combine(drive.RootDirectory.FullName, nameof(Backup));
-//#if DEBUG
-//                        result += "Test";
-//#endif
+                            //#if DEBUG
+                            //                        result += "Test";
+                            //#endif
                         }
                     }
                 }
@@ -283,6 +286,32 @@ namespace AntiGitLibrary
                 WriteOutput(e.Message);
             }
             return null;
+        }
+
+        private bool? _enabledAutoBackup;
+
+        /// <summary>
+        /// Source directory, which you want to backup and have data redundancy remotely.
+        /// </summary>
+        public bool EnabledAutoBackup
+        {
+            get
+            {
+                if (_enabledAutoBackup != null)
+                    return (bool)_enabledAutoBackup;
+                var autoBackup = GetValue("autoBackup");
+                _enabledAutoBackup = !string.IsNullOrEmpty(autoBackup) && bool.Parse(autoBackup);
+                return (bool)_enabledAutoBackup;
+            }
+            set
+            {
+                if (value != _enabledAutoBackup)
+                {
+                    _enabledAutoBackup = value;
+                    SetValue("autoBackup", value.ToString());
+                    Monitoring.EnabledAutoBackup = value;
+                }
+            }
         }
 
         private string _sourceDir;
