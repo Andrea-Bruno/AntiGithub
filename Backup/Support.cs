@@ -250,7 +250,7 @@ namespace BackupLibrary
                     attempt++;
                     if (attempt == 320) // 5 min - Note: It may be that a copy is in progress, or other normal operations use the file, before giving a warning we wait for the normal operations to be finished
                     {
-                        Backup.InvokeOnAlert("File Locked " + file.FullName, true);
+                        InvokeOnAlert("File Locked " + file.FullName, true);
                     }
                     System.Threading.Thread.Sleep(1000);
                     file = new FileInfo(file.FullName);
