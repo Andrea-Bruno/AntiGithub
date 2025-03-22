@@ -128,7 +128,6 @@ namespace BackupLibrary
         static private FileSystemInfo _CreateHardLink(string linkFileName, string targetFileName)
         {
             targetFileName = GetAbsolutePath(linkFileName, targetFileName);
-            Debugger.Break();
             try
             {
                 var error = false;
