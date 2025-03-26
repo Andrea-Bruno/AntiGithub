@@ -318,13 +318,9 @@ namespace BackupLibrary
             {
                 return true;
             }
-            using (var file1 = fileInfo1.OpenRead())
-            {
-                using (var file2 = fileInfo2.OpenRead())
-                {
-                    return StreamsContentsAreEqual(file1, file2);
-                }
-            }
+            using var file1 = fileInfo1.OpenRead();
+            using var file2 = fileInfo2.OpenRead();
+            return StreamsContentsAreEqual(file1, file2);
         }
 
         private static bool StreamsContentsAreEqual(Stream stream1, Stream stream2)
